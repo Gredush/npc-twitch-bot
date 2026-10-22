@@ -1,4 +1,5 @@
 import sqlite3
+import random
 
 from ai.brain import generate_reply
 from ai.should_reply import should_reply
@@ -21,31 +22,71 @@ from returning_viewer import (
 
 class NPCEngine:
 
+    COMMON_REPLIES = {
+
+        "ti kaneis": [
+            "kala re 😄",
+            "ola kala 😄",
+            "ta klasika 😄"
+        ],
+
+        "pos eisai": [
+            "kala re 😄",
+            "ola kala 😄",
+            "mia xara 😄"
+        ],
+
+        "ti nea": [
+            "tipota spoudaio 😄",
+            "ta klasika 😄",
+            "ola kala 😄"
+        ],
+
+        "geia": [
+            "geia 😄"
+        ],
+
+        "geia xara": [
+            "geia re 😄"
+        ],
+
+        "kalispera": [
+            "kalispera 😄"
+        ],
+
+        "kalimera": [
+            "kalimera 😄"
+        ],
+
+        "opa": [
+            "ti egine? 😂"
+        ],
+
+        "lol": [
+            "😂"
+        ],
+
+        "xaxa": [
+            "😂"
+        ]
+    }
+
     def __init__(self):
 
         self.social_memory = SocialMemory()
 
-        self.memory_extractor = (
-            MemoryExtractor()
-        )
+        self.memory_extractor = MemoryExtractor()
 
-        self.affinity_manager = (
-            AffinityManager()
-        )
-
+        self.affinity_manager = AffinityManager()
         self.affinity_manager.apply_decay()
 
-        self.interest_manager = (
-            InterestManager()
-        )
+        self.interest_manager = InterestManager()
 
         self.npc_memory = NPCMemory()
 
         self.npc_state = NPCState()
 
-        self.returning_viewer = (
-            ReturningViewer()
-        )
+        self.returning_viewer = ReturningViewer()
 
     def save_user_message(
         self,
@@ -65,7 +106,10 @@ class NPCEngine:
             (username, message)
             VALUES (?, ?)
             """,
-            (username, content)
+            (
+                username,
+                content
+            )
         )
 
         cursor.execute(
@@ -124,11 +168,9 @@ class NPCEngine:
             if not memory:
                 return
 
-            if (
-                self.social_memory.memory_exists(
-                    username,
-                    memory
-                )
+            if self.social_memory.memory_exists(
+                username,
+                memory
             ):
                 return
 
@@ -163,16 +205,9 @@ class NPCEngine:
 
         try:
 
-            if (
-                self.returning_viewer
-                .should_welcome_back(
-                    username
-                )
+            if self.returning_viewer.should_welcome_back(
+                username
             ):
-
-                print(
-                    "DEBUG: returning viewer detected"
-                )
 
                 if self.npc_state.can_reply():
 
@@ -213,49 +248,94 @@ class NPCEngine:
 
         return welcome_message
 
+    def try_common_reply(
+        self,
+        content
+    ):
+
+        text = (
+            content
+            .lower()
+            .strip()
+            .replace(";", "")
+            .replace("?", "")
+            .replace("!", "")
+            .replace(".", "")
+            .replace(",", "")
+        )
+
+        for trigger, replies in (
+            self.COMMON_REPLIES.items()
+        ):
+
+            if trigger in text:
+
+                return random.choice(
+                    replies
+                )
+
+        return None
+
     def maybe_generate_reply(
         self,
         username,
-        content
+        content,
+        force_reply=False
     ):
 
         print(
             "DEBUG: maybe_generate_reply called"
         )
 
-        if not self.npc_state.can_reply():
+        common = self.try_common_reply(
+            content
+        )
+
+        if common:
 
             print(
-                "DEBUG: can_reply = False"
+                f"DEBUG COMMON: {common}"
             )
 
-            return None
+            return common
+
+        if not force_reply:
+
+            if not self.npc_state.can_reply():
+
+                print(
+                    "DEBUG: can_reply = False"
+                )
+
+                return None
 
         print(
             "DEBUG: can_reply = True"
         )
 
-        try:
+        if not force_reply:
 
-            should = should_reply(
-                username,
-                content
-            )
+            try:
 
-            print(
-                f"DEBUG: should_reply = {should}"
-            )
+                should = should_reply(
+                    username,
+                    content
+                )
 
-            if not should:
+                print(
+                    f"DEBUG: should_reply = {should}"
+                )
+
+                if not should:
+                    return None
+
+            except Exception as e:
+
+                print(
+                    f"SHOULD_REPLY ERROR: {e}"
+                )
+
                 return None
-
-        except Exception as e:
-
-            print(
-                f"SHOULD_REPLY ERROR: {e}"
-            )
-
-            return None
 
         try:
 
@@ -277,11 +357,6 @@ class NPCEngine:
             return None
 
         if not reply:
-
-            print(
-                "DEBUG: Empty reply"
-            )
-
             return None
 
         reply = (
@@ -293,22 +368,14 @@ class NPCEngine:
             .strip()
         )
 
-        try:
+        self.npc_memory.save_npc_message(
+            reply
+        )
 
-            self.npc_memory.save_npc_message(
-                reply
-            )
+        reply_memory.register_npc_message(
+            reply
+        )
 
-            reply_memory.register_npc_message(
-                reply
-            )
-
-            self.npc_state.register_reply()
-
-        except Exception as e:
-
-            print(
-                f"SAVE REPLY ERROR: {e}"
-            )
+        self.npc_state.register_reply()
 
         return reply

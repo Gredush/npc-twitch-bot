@@ -2,7 +2,6 @@ from twitchio.ext import commands
 from dotenv import load_dotenv
 
 from npc_engine import NPCEngine
-from ai.brain import generate_reply
 
 import sqlite3
 import os
@@ -105,7 +104,7 @@ class Bot(commands.Bot):
             return
 
         # =====================
-        # !ai DEBUG / TEST MODE
+        # !ai TEST MODE
         # =====================
 
         if content.lower().startswith(
@@ -119,9 +118,10 @@ class Bot(commands.Bot):
 
             try:
 
-                reply = generate_reply(
+                reply = npc.maybe_generate_reply(
                     username,
-                    question
+                    question,
+                    force_reply=True
                 )
 
                 print(

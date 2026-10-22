@@ -1,11 +1,8 @@
 from ai.providers.groq_provider import generate
 
 from conversation_tracker import ConversationTracker
-from conversation_memory import ConversationMemory
-from relationship_manager import RelationshipManager
 from social_memory import SocialMemory
 from language_detector import LanguageDetector
-from affinity_manager import AffinityManager
 from context_recall import ContextRecall
 from interest_manager import InterestManager
 
@@ -26,8 +23,6 @@ def build_prompt(username, user_message):
     personality = load_personality()
 
     tracker = ConversationTracker()
-    relationships = RelationshipManager()
-    memory = ConversationMemory()
     social = SocialMemory()
     detector = LanguageDetector()
     recall = ContextRecall()
@@ -38,22 +33,10 @@ def build_prompt(username, user_message):
 
     topic = tracker.get_current_topic()
 
-    conversation = (
-        memory.build_conversation_block()
-    )
-
     recent_context = (
         recall.build_context_summary(
-            20
+            15
         )
-    )
-
-    role = relationships.viewer_role(
-        username
-    )
-
-    affinity = AffinityManager().get_score(
-        username
     )
 
     interests = (
@@ -65,7 +48,7 @@ def build_prompt(username, user_message):
 
     interest_block = "\n".join(
         [
-            f"{interest}: {score}"
+            interest
             for interest, score in interests
         ]
     )
@@ -75,125 +58,78 @@ def build_prompt(username, user_message):
         user_message
     )
 
-    memory_block = "\n".join(memories)
+    memory_block = "\n".join(
+        memories
+    )
 
     return f"""
 {personality}
 
-STREAMER:
-gredush
-
 CURRENT TOPIC:
 {topic}
-
-Αν υπάρχει topic,
-προτίμησε να παραμείνεις σε αυτό.
-
-Μην αλλάζεις θέμα εύκολα.
-
-USER:
-{username}
-
-USER ROLE:
-{role}
-
-AFFINITY:
-{affinity}
 
 LANGUAGE:
 {language}
 
-USER INTERESTS:
+USER:
+{username}
 
+INTERESTS:
 {interest_block}
 
-KNOWN MEMORIES:
-
-Οι παρακάτω μνήμες θεωρούνται σχετικές
-με το τρέχον μήνυμα.
-
-Μην αναφέρεις όλες.
-
-Χρησιμοποίησε τες μόνο αν βοηθούν φυσικά.
-
+MEMORIES:
 {memory_block}
 
-RECENT CONVERSATION:
-
-{conversation}
-
 RECENT CONTEXT:
-
 {recent_context}
 
-Αν το τελευταίο μήνυμα είναι ασαφές
-ή αναφέρεται έμμεσα σε κάτι,
-χρησιμοποίησε το παραπάνω context.
-
 LATEST MESSAGE:
-
 {username}: {user_message}
 
 ΚΑΝΟΝΕΣ:
 
-Αν LANGUAGE = greek
-απάντα ελληνικά.
-
-Αν LANGUAGE = greeklish
-απάντα greeklish.
-
-Αν LANGUAGE = other
-απάντα φυσικά.
-
-Αν γνωρίζεις κάτι για τον χρήστη,
-μπορείς περιστασιακά να το χρησιμοποιήσεις.
-
-Όχι σε κάθε απάντηση.
-
-Αν γνωρίζεις τα ενδιαφέροντά του,
-μπορείς να τα χρησιμοποιήσεις φυσικά.
-
-Ο gredush είναι ο streamer.
-
-Τον συμπαθείς.
-
-Αν κάποιος τον πειράζει,
-συνήθως τον υποστηρίζεις με χιούμορ.
-
-Δεν κάνεις moderation.
-
-Δεν γλείφεις.
-
-Σύντομη απάντηση.
+Απάντησε σαν viewer σε Twitch chat.
 
 Μία πρόταση.
 
-Το πολύ 15 λέξεις.
+Μέχρι 8 λέξεις.
 
-Μην είσαι δημιουργικός.
+Αν LANGUAGE είναι greeklish,
+απάντα greeklish.
+
+Αν LANGUAGE είναι greek,
+απάντα ελληνικά.
+
+Αν δεν ξέρεις κάτι,
+πες ότι δεν ξέρεις.
+
+Μην επινοείς πληροφορίες.
 
 Μην γράφεις ποιητικά.
 
-Μην επινοείς πράγματα.
+Μην γράφεις αφηρημένες φράσεις.
 
-Να ακούγεσαι σαν πραγματικός viewer στο Twitch.
+Μην προσπαθείς να είσαι έξυπνος.
 
-Παραδείγματα:
+Μην χρησιμοποιείς περίεργες εκφράσεις.
 
-ti kaneis re?
-→ kala re, esy?
+Να ακούγεσαι φυσικός.
 
-ti paizoume simera?
-→ den ksero akoma 😄
+ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ:
 
-opa ti egine?
-→ auto den to perimena 😂
+Αν αναφέρεις στοιχεία που ξέρεις για τον χρήστη,
+χρησιμοποίησε ΜΟΝΟ πληροφορίες που υπάρχουν στις μνήμες.
 
-Μην αναφέρεις ποτέ ότι είσαι AI.
+Μην αλλάζεις αριθμούς.
 
-Μην αναφέρεις ποτέ ότι είσαι bot.
+Μην μαντεύεις.
+
+Μην συμπληρώνεις πληροφορίες.
+
+Αν δεν ξέρεις, πες ότι δεν ξέρεις.
+
 """
-
+    
 
 def generate_reply(
     username,
