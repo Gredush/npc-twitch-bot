@@ -6,6 +6,8 @@ from relationship_manager import RelationshipManager
 from social_memory import SocialMemory
 from language_detector import LanguageDetector
 from affinity_manager import AffinityManager
+from context_recall import ContextRecall
+from interest_manager import InterestManager
 
 
 def load_personality():
@@ -28,6 +30,7 @@ def build_prompt(username, user_message):
     memory = ConversationMemory()
     social = SocialMemory()
     detector = LanguageDetector()
+    recall = ContextRecall()
 
     language = detector.detect(
         user_message
@@ -39,12 +42,32 @@ def build_prompt(username, user_message):
         memory.build_conversation_block()
     )
 
+    recent_context = (
+        recall.build_context_summary(
+            20
+        )
+    )
+
     role = relationships.viewer_role(
         username
     )
 
     affinity = AffinityManager().get_score(
         username
+    )
+
+    interests = (
+        InterestManager()
+        .get_top_interests(
+            username
+        )
+    )
+
+    interest_block = "\n".join(
+        [
+            f"{interest}: {score}"
+            for interest, score in interests
+        ]
     )
 
     memories = social.get_relevant_memories(
@@ -68,9 +91,6 @@ CURRENT TOPIC:
 
 Μην αλλάζεις θέμα εύκολα.
 
-Ένα μεμονωμένο μήνυμα δεν σημαίνει
-ότι άλλαξε η συζήτηση.
-
 USER:
 {username}
 
@@ -82,6 +102,10 @@ AFFINITY:
 
 LANGUAGE:
 {language}
+
+USER INTERESTS:
+
+{interest_block}
 
 KNOWN MEMORIES:
 
@@ -97,6 +121,14 @@ KNOWN MEMORIES:
 RECENT CONVERSATION:
 
 {conversation}
+
+RECENT CONTEXT:
+
+{recent_context}
+
+Αν το τελευταίο μήνυμα είναι ασαφές
+ή αναφέρεται έμμεσα σε κάτι,
+χρησιμοποίησε το παραπάνω context.
 
 LATEST MESSAGE:
 
@@ -117,6 +149,9 @@ LATEST MESSAGE:
 μπορείς περιστασιακά να το χρησιμοποιήσεις.
 
 Όχι σε κάθε απάντηση.
+
+Αν γνωρίζεις τα ενδιαφέροντά του,
+μπορείς να τα χρησιμοποιήσεις φυσικά.
 
 Ο gredush είναι ο streamer.
 
@@ -139,14 +174,9 @@ LATEST MESSAGE:
 
 Μην γράφεις ποιητικά.
 
-Μην μιλάς αφηρημένα.
-
 Μην επινοείς πράγματα.
 
 Να ακούγεσαι σαν πραγματικός viewer στο Twitch.
-
-Αν η ερώτηση είναι απλή,
-η απάντηση να είναι απλή.
 
 Παραδείγματα:
 
@@ -154,7 +184,7 @@ ti kaneis re?
 → kala re, esy?
 
 ti paizoume simera?
-→ logika WoW apo oti fainetai
+→ den ksero akoma 😄
 
 opa ti egine?
 → auto den to perimena 😂

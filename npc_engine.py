@@ -7,6 +7,7 @@ from social_memory import SocialMemory
 from memory_extractor import MemoryExtractor
 
 from affinity_manager import AffinityManager
+from interest_manager import InterestManager
 
 from npc_memory import NPCMemory
 from npc_state import NPCState
@@ -34,6 +35,10 @@ class NPCEngine:
 
         self.affinity_manager.apply_decay()
 
+        self.interest_manager = (
+            InterestManager()
+        )
+
         self.npc_memory = NPCMemory()
 
         self.npc_state = NPCState()
@@ -60,10 +65,7 @@ class NPCEngine:
             (username, message)
             VALUES (?, ?)
             """,
-            (
-                username,
-                content
-            )
+            (username, content)
         )
 
         cursor.execute(
@@ -176,6 +178,11 @@ class NPCEngine:
         )
 
         self.process_memory(
+            username,
+            content
+        )
+
+        self.interest_manager.process_message(
             username,
             content
         )
