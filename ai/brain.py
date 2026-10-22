@@ -1,4 +1,4 @@
-from ai.providers.groq_provider import generate
+from ai.router import generate
 
 from conversation_tracker import ConversationTracker
 from social_memory import SocialMemory
