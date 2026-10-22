@@ -52,15 +52,29 @@ def generate(prompt):
 
         try:
 
+            print(
+                f"TRYING GROQ MODEL: {model}"
+            )
+
             reply = try_model(
                 model,
                 prompt
             )
 
+            print(
+                f"GROQ MODEL REPLY: [{reply}]"
+            )
+
             if reply:
+
                 return reply
 
-        except Exception:
+        except Exception as e:
+
+            print(
+                f"GROQ MODEL FAILED {model}: {e}"
+            )
+
             continue
 
     return None

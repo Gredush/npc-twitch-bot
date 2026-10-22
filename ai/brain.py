@@ -136,9 +136,13 @@ def generate_reply(
     user_message
 ):
 
+    print("BRAIN: building prompt")
+
     prompt = build_prompt(
         username,
         user_message
     )
+
+    print("BRAIN: calling router")
 
     return generate(prompt)
