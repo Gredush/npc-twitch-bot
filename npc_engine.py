@@ -277,45 +277,58 @@ class NPCEngine:
         return None
 
     def maybe_generate_reply(
-        self,
-        username,
-        content,
-        force_reply=False
-    ):
+    self,
+    username,
+    content,
+    force_reply=False,
+    mentioned=False
+):
+
+    print(
+        "DEBUG: maybe_generate_reply called"
+    )
+
+    common = self.try_common_reply(
+        content
+    )
+
+    if common:
 
         print(
-            "DEBUG: maybe_generate_reply called"
+            f"DEBUG COMMON: {common}"
         )
 
-        common = self.try_common_reply(
-            content
-        )
+        return common
 
-        if common:
+    if not force_reply:
+
+        if not self.npc_state.can_reply():
 
             print(
-                f"DEBUG COMMON: {common}"
+                "DEBUG: can_reply = False"
             )
 
-            return common
+            return None
 
-        if not force_reply:
+    print(
+        "DEBUG: can_reply = True"
+    )
 
-            if not self.npc_state.can_reply():
+    if not force_reply:
 
-                print(
-                    "DEBUG: can_reply = False"
+        try:
+
+            if mentioned:
+
+                should = (
+                    random.random() < 0.90
                 )
 
-                return None
+                print(
+                    f"DEBUG: mention reply = {should}"
+                )
 
-        print(
-            "DEBUG: can_reply = True"
-        )
-
-        if not force_reply:
-
-            try:
+            else:
 
                 should = should_reply(
                     username,
@@ -326,56 +339,56 @@ class NPCEngine:
                     f"DEBUG: should_reply = {should}"
                 )
 
-                if not should:
-                    return None
-
-            except Exception as e:
-
-                print(
-                    f"SHOULD_REPLY ERROR: {e}"
-                )
-
+            if not should:
                 return None
-
-        try:
-
-            reply = generate_reply(
-                username,
-                content
-            )
-
-            print(
-                f"DEBUG REPLY: {reply}"
-            )
 
         except Exception as e:
 
             print(
-                f"GENERATE_REPLY ERROR: {e}"
+                f"SHOULD_REPLY ERROR: {e}"
             )
 
             return None
 
-        if not reply:
-            return None
+    try:
 
-        reply = (
-            reply
-            .replace("\n", " ")
-            .replace("🤖", "")
-            .replace("AI", "")
-            .replace("bot", "")
-            .strip()
+        reply = generate_reply(
+            username,
+            content
         )
 
-        self.npc_memory.save_npc_message(
-            reply
+        print(
+            f"DEBUG REPLY: {reply}"
         )
 
-        reply_memory.register_npc_message(
-            reply
+    except Exception as e:
+
+        print(
+            f"GENERATE_REPLY ERROR: {e}"
         )
 
-        self.npc_state.register_reply()
+        return None
 
-        return reply
+    if not reply:
+        return None
+
+    reply = (
+        reply
+        .replace("\n", " ")
+        .replace("🤖", "")
+        .replace("AI", "")
+        .replace("bot", "")
+        .strip()
+    )
+
+    self.npc_memory.save_npc_message(
+        reply
+    )
+
+    reply_memory.register_npc_message(
+        reply
+    )
+
+    self.npc_state.register_reply()
+
+    return reply
