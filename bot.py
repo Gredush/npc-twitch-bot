@@ -1,6 +1,9 @@
 from twitchio.ext import commands
 from dotenv import load_dotenv
+
 from ai.brain import generate_reply
+from ai.should_reply import should_reply
+from npc_state import NPCState
 
 import os
 import sqlite3
@@ -10,6 +13,8 @@ load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 BOT_NICK = os.getenv("BOT_NICK")
 CHANNEL = os.getenv("CHANNEL_NAME")
+
+npc_state = NPCState()
 
 
 class Bot(commands.Bot):
@@ -34,6 +39,13 @@ class Bot(commands.Bot):
         content = message.content.strip()
 
         print(f"{username}: {content}")
+
+        # Register message in NPC state
+        npc_state.register_message()
+
+        # ======================
+        # SAVE TO DATABASE
+        # ======================
 
         conn = sqlite3.connect("memory.db")
         cursor = conn.cursor()
@@ -68,6 +80,8 @@ class Bot(commands.Bot):
                 (username,)
             )
 
+            print(f"New viewer: {username}")
+
         else:
 
             cursor.execute(
@@ -84,7 +98,9 @@ class Bot(commands.Bot):
         conn.commit()
         conn.close()
 
-        # Viewer stats
+        # ======================
+        # !stats
+        # ======================
 
         if content.lower() == "!stats":
 
@@ -112,7 +128,9 @@ class Bot(commands.Bot):
 
             return
 
-        # AI debug command
+        # ======================
+        # !ai DEBUG COMMAND
+        # ======================
 
         if content.lower().startswith("!ai"):
 
@@ -130,17 +148,16 @@ class Bot(commands.Bot):
 
                 if reply:
 
-                    clean_reply = (
+                    reply = (
                         reply
                         .replace("\n", " ")
                         .replace("🤖", "")
                         .replace("AI", "")
-                        .replace("είμαι bot", "")
                         .strip()
                     )
 
                     await message.channel.send(
-                        clean_reply[:450]
+                        reply[:450]
                     )
 
             except Exception as e:
@@ -149,7 +166,45 @@ class Bot(commands.Bot):
 
             return
 
-        # Legacy response
+        # ======================
+        # AUTO NPC MODE
+        # ======================
+
+        try:
+
+            if npc_state.can_reply():
+
+                if should_reply(username, content):
+
+                    reply = generate_reply(
+                        username,
+                        content
+                    )
+
+                    if reply:
+
+                        reply = (
+                            reply
+                            .replace("\n", " ")
+                            .replace("🤖", "")
+                            .replace("AI", "")
+                            .replace("είμαι bot", "")
+                            .strip()
+                        )
+
+                        await message.channel.send(
+                            reply[:350]
+                        )
+
+                        npc_state.register_reply()
+
+        except Exception as e:
+
+            print("NPC ERROR:", e)
+
+        # ======================
+        # LEGACY TEST
+        # ======================
 
         if "kalimera" in content.lower():
 

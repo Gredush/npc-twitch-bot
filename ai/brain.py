@@ -1,5 +1,6 @@
 from ai.utils.context_builder import build_chat_context
 from ai.providers.groq_provider import generate
+from conversation_tracker import ConversationTracker
 
 
 def load_personality():
@@ -16,34 +17,48 @@ def build_prompt(username, user_message):
 
     personality = load_personality()
 
-    context = build_chat_context()
+    context = build_chat_context(25)
 
-    prompt = f"""
+    tracker = ConversationTracker()
+
+    current_topic = tracker.get_current_topic()
+
+    return f"""
 {personality}
 
-CHAT HISTORY:
+ΤΡΕΧΟΝ ΘΕΜΑ ΣΥΖΗΤΗΣΗΣ:
+
+{current_topic}
+
+ΠΡΟΣΦΑΤΟ CHAT:
 
 {context}
 
-CURRENT USER:
-{username}
+ΝΕΟ ΜΗΝΥΜΑ:
 
-MESSAGE:
-{user_message}
+{username}: {user_message}
 
-Απάντησε σαν NPC του καναλιού.
-Μίλα ελληνικά.
-Μην γράφεις μεγάλα κείμενα.
+Συμπεριφέρσου σαν παλιός viewer.
+
+Αν υπάρχει θέμα συζήτησης, αναφέρσου σε αυτό.
+
+Οι απαντήσεις πρέπει να είναι:
+
+- 1 πρόταση
+- σύντομες
+- φυσικές
+- σαν Twitch viewer
+
+Μην αναφέρεις ποτέ ότι είσαι AI.
+Μην αναφέρεις ποτέ ότι είσαι bot.
 """
+    
 
-    return prompt
-
-
-def generate_reply(username, message):
+def generate_reply(username, user_message):
 
     prompt = build_prompt(
         username,
-        message
+        user_message
     )
 
     return generate(prompt)
