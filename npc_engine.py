@@ -276,119 +276,119 @@ class NPCEngine:
 
         return None
 
-    def maybe_generate_reply(
-    self,
-    username,
-    content,
-    force_reply=False,
-    mentioned=False
-):
-
-    print(
-        "DEBUG: maybe_generate_reply called"
-    )
-
-    common = self.try_common_reply(
-        content
-    )
-
-    if common:
+        def maybe_generate_reply(
+        self,
+        username,
+        content,
+        force_reply=False,
+        mentioned=False
+    ):
 
         print(
-            f"DEBUG COMMON: {common}"
+            "DEBUG: maybe_generate_reply called"
         )
 
-        return common
+        common = self.try_common_reply(
+            content
+        )
 
-    if not force_reply:
-
-        if not self.npc_state.can_reply():
+        if common:
 
             print(
-                "DEBUG: can_reply = False"
+                f"DEBUG COMMON: {common}"
             )
 
-            return None
+            return common
 
-    print(
-        "DEBUG: can_reply = True"
-    )
+        if not force_reply:
 
-    if not force_reply:
+            if not self.npc_state.can_reply():
+
+                print(
+                    "DEBUG: can_reply = False"
+                )
+
+                return None
+
+        print(
+            "DEBUG: can_reply = True"
+        )
+
+        if not force_reply:
+
+            try:
+
+                if mentioned:
+
+                    should = (
+                        random.random() < 0.90
+                    )
+
+                    print(
+                        f"DEBUG: mention reply = {should}"
+                    )
+
+                else:
+
+                    should = should_reply(
+                        username,
+                        content
+                    )
+
+                    print(
+                        f"DEBUG: should_reply = {should}"
+                    )
+
+                if not should:
+                    return None
+
+            except Exception as e:
+
+                print(
+                    f"SHOULD_REPLY ERROR: {e}"
+                )
+
+                return None
 
         try:
 
-            if mentioned:
+            reply = generate_reply(
+                username,
+                content
+            )
 
-                should = (
-                    random.random() < 0.90
-                )
-
-                print(
-                    f"DEBUG: mention reply = {should}"
-                )
-
-            else:
-
-                should = should_reply(
-                    username,
-                    content
-                )
-
-                print(
-                    f"DEBUG: should_reply = {should}"
-                )
-
-            if not should:
-                return None
+            print(
+                f"DEBUG REPLY: {reply}"
+            )
 
         except Exception as e:
 
             print(
-                f"SHOULD_REPLY ERROR: {e}"
+                f"GENERATE_REPLY ERROR: {e}"
             )
 
             return None
 
-    try:
+        if not reply:
+            return None
 
-        reply = generate_reply(
-            username,
-            content
+        reply = (
+            reply
+            .replace("\n", " ")
+            .replace("🤖", "")
+            .replace("AI", "")
+            .replace("bot", "")
+            .strip()
         )
 
-        print(
-            f"DEBUG REPLY: {reply}"
+        self.npc_memory.save_npc_message(
+            reply
         )
 
-    except Exception as e:
-
-        print(
-            f"GENERATE_REPLY ERROR: {e}"
+        reply_memory.register_npc_message(
+            reply
         )
 
-        return None
+        self.npc_state.register_reply()
 
-    if not reply:
-        return None
-
-    reply = (
-        reply
-        .replace("\n", " ")
-        .replace("🤖", "")
-        .replace("AI", "")
-        .replace("bot", "")
-        .strip()
-    )
-
-    self.npc_memory.save_npc_message(
-        reply
-    )
-
-    reply_memory.register_npc_message(
-        reply
-    )
-
-    self.npc_state.register_reply()
-
-    return reply
+        return reply
