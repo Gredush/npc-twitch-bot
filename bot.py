@@ -1,5 +1,7 @@
 from twitchio.ext import commands
 from dotenv import load_dotenv
+from ai.brain import generate_reply
+
 import os
 import sqlite3
 
@@ -36,7 +38,6 @@ class Bot(commands.Bot):
         conn = sqlite3.connect("memory.db")
         cursor = conn.cursor()
 
-        # Αποθήκευση μηνύματος
         cursor.execute(
             """
             INSERT INTO messages (username, message)
@@ -45,7 +46,6 @@ class Bot(commands.Bot):
             (username, content)
         )
 
-        # Έλεγχος αν υπάρχει viewer profile
         cursor.execute(
             """
             SELECT username
@@ -58,6 +58,7 @@ class Bot(commands.Bot):
         viewer = cursor.fetchone()
 
         if viewer is None:
+
             cursor.execute(
                 """
                 INSERT INTO viewers
@@ -67,9 +68,8 @@ class Bot(commands.Bot):
                 (username,)
             )
 
-            print(f"New viewer detected: {username}")
-
         else:
+
             cursor.execute(
                 """
                 UPDATE viewers
@@ -83,6 +83,8 @@ class Bot(commands.Bot):
 
         conn.commit()
         conn.close()
+
+        # STATS
 
         if content.lower() == "!stats":
 
@@ -103,11 +105,58 @@ class Bot(commands.Bot):
             conn.close()
 
             if result:
+
                 await message.channel.send(
                     f"@{username} έχεις γράψει {result[0]} μηνύματα στο chat."
                 )
 
+            return
+
+        # AI COMMAND
+
+        if content.lower().startswith("!ai"):
+
+            question = content[3:].strip()
+
+            if not question:
+
+                await message.channel.send(
+                    f"@{username} γράψε κάτι μετά το !ai"
+                )
+
+                return
+
+            await message.channel.send(
+                "🤖 Σκέφτομαι..."
+            )
+
+            try:
+
+                reply = generate_reply(
+                    username,
+                    question
+                )
+
+                if reply:
+
+                    reply = reply.replace("\n", " ")
+
+                    await message.channel.send(
+                        reply[:450]
+                    )
+
+            except Exception as e:
+
+                print(e)
+
+                await message.channel.send(
+                    "⚠️ Κάτι πήγε στραβά με το AI."
+                )
+
+            return
+
         if "kalimera" in content.lower():
+
             await message.channel.send(
                 f"Kalimera @{username}!"
             )
