@@ -2,6 +2,7 @@ from twitchio.ext import commands
 from dotenv import load_dotenv
 
 from npc_engine import NPCEngine
+from ai.brain import generate_reply
 
 import sqlite3
 import os
@@ -70,6 +71,10 @@ class Bot(commands.Bot):
 
             return
 
+        # =====================
+        # !stats
+        # =====================
+
         if content.lower() == "!stats":
 
             conn = sqlite3.connect(
@@ -99,6 +104,10 @@ class Bot(commands.Bot):
 
             return
 
+        # =====================
+        # !ai DEBUG / TEST MODE
+        # =====================
+
         if content.lower().startswith(
             "!ai"
         ):
@@ -108,28 +117,52 @@ class Bot(commands.Bot):
             if not question:
                 return
 
+            try:
+
+                reply = generate_reply(
+                    username,
+                    question
+                )
+
+                print(
+                    f"DEBUG AI REPLY: {reply}"
+                )
+
+                if reply:
+
+                    await message.channel.send(
+                        reply[:450]
+                    )
+
+            except Exception as e:
+
+                print(
+                    f"AI ERROR: {e}"
+                )
+
+            return
+
+        # =====================
+        # NORMAL NPC LOGIC
+        # =====================
+
+        try:
+
             reply = npc.maybe_generate_reply(
                 username,
-                question
+                content
             )
 
             if reply:
 
                 await message.channel.send(
-                    reply[:450]
+                    reply[:350]
                 )
 
-            return
+        except Exception as e:
 
-        reply = npc.maybe_generate_reply(
-            username,
-            content
-        )
-
-        if reply:
-
-            await message.channel.send(
-                reply[:350]
+            print(
+                f"NPC ERROR: {e}"
             )
 
         await self.handle_commands(

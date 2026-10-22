@@ -112,32 +112,40 @@ class NPCEngine:
         content
     ):
 
-        memory = (
-            self.memory_extractor.extract(
-                username,
-                content
+        try:
+
+            memory = (
+                self.memory_extractor.extract(
+                    username,
+                    content
+                )
             )
-        )
 
-        if not memory:
-            return
+            if not memory:
+                return
 
-        if (
-            self.social_memory.memory_exists(
+            if (
+                self.social_memory.memory_exists(
+                    username,
+                    memory
+                )
+            ):
+                return
+
+            self.social_memory.save_memory(
                 username,
                 memory
             )
-        ):
-            return
 
-        self.social_memory.save_memory(
-            username,
-            memory
-        )
+            print(
+                f"NEW MEMORY: {username} -> {memory}"
+            )
 
-        print(
-            f"NEW MEMORY: {username} -> {memory}"
-        )
+        except Exception as e:
+
+            print(
+                f"MEMORY ERROR: {e}"
+            )
 
     def process_message(
         self,
@@ -145,27 +153,43 @@ class NPCEngine:
         content
     ):
 
+        print(
+            "DEBUG: process_message"
+        )
+
         self.npc_state.register_message()
 
         welcome_message = None
 
-        if (
-            self.returning_viewer
-            .should_welcome_back(
-                username
-            )
-        ):
+        try:
 
-            if self.npc_state.can_reply():
+            if (
+                self.returning_viewer
+                .should_welcome_back(
+                    username
+                )
+            ):
 
-                welcome_message = (
-                    self.returning_viewer
-                    .welcome_message(
-                        username
-                    )
+                print(
+                    "DEBUG: returning viewer detected"
                 )
 
-                self.npc_state.register_reply()
+                if self.npc_state.can_reply():
+
+                    welcome_message = (
+                        self.returning_viewer
+                        .welcome_message(
+                            username
+                        )
+                    )
+
+                    self.npc_state.register_reply()
+
+        except Exception as e:
+
+            print(
+                f"RETURNING VIEWER ERROR: {e}"
+            )
 
         self.affinity_manager.increase(
             username,
@@ -195,21 +219,69 @@ class NPCEngine:
         content
     ):
 
-        if not self.npc_state.can_reply():
-            return None
-
-        if not should_reply(
-            username,
-            content
-        ):
-            return None
-
-        reply = generate_reply(
-            username,
-            content
+        print(
+            "DEBUG: maybe_generate_reply called"
         )
 
+        if not self.npc_state.can_reply():
+
+            print(
+                "DEBUG: can_reply = False"
+            )
+
+            return None
+
+        print(
+            "DEBUG: can_reply = True"
+        )
+
+        try:
+
+            should = should_reply(
+                username,
+                content
+            )
+
+            print(
+                f"DEBUG: should_reply = {should}"
+            )
+
+            if not should:
+                return None
+
+        except Exception as e:
+
+            print(
+                f"SHOULD_REPLY ERROR: {e}"
+            )
+
+            return None
+
+        try:
+
+            reply = generate_reply(
+                username,
+                content
+            )
+
+            print(
+                f"DEBUG REPLY: {reply}"
+            )
+
+        except Exception as e:
+
+            print(
+                f"GENERATE_REPLY ERROR: {e}"
+            )
+
+            return None
+
         if not reply:
+
+            print(
+                "DEBUG: Empty reply"
+            )
+
             return None
 
         reply = (
@@ -221,14 +293,22 @@ class NPCEngine:
             .strip()
         )
 
-        self.npc_memory.save_npc_message(
-            reply
-        )
+        try:
 
-        reply_memory.register_npc_message(
-            reply
-        )
+            self.npc_memory.save_npc_message(
+                reply
+            )
 
-        self.npc_state.register_reply()
+            reply_memory.register_npc_message(
+                reply
+            )
+
+            self.npc_state.register_reply()
+
+        except Exception as e:
+
+            print(
+                f"SAVE REPLY ERROR: {e}"
+            )
 
         return reply
