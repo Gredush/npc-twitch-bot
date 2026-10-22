@@ -1,6 +1,7 @@
 class MemoryExtractor:
 
     TRIGGERS = [
+
         "παίζω",
         "δουλεύω",
         "εργάζομαι",
@@ -14,12 +15,46 @@ class MemoryExtractor:
         "έχω"
     ]
 
-    def extract(self, username, message):
+    QUESTION_MARKERS = [
 
-        text = message.lower()
+        "?",
+        "ποιος",
+        "ποια",
+        "ποιο",
+        "τι",
+        "πώς",
+        "πως",
+        "γιατί",
+        "που",
+        "πού",
+        "πότε",
+        "με ξέρεις",
+        "ξέρεις",
+        "γνωρίζεις"
+    ]
+
+    def extract(
+        self,
+        username,
+        message
+    ):
+
+        text = (
+            message
+            .lower()
+            .strip()
+        )
+
+        if text.startswith("!"):
+            return None
 
         if len(text.split()) < 4:
             return None
+
+        for marker in self.QUESTION_MARKERS:
+
+            if marker in text:
+                return None
 
         for trigger in self.TRIGGERS:
 

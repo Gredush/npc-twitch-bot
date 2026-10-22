@@ -5,6 +5,8 @@ from npc_engine import NPCEngine
 
 import sqlite3
 import os
+import asyncio
+import random
 
 load_dotenv()
 
@@ -13,6 +15,33 @@ BOT_NICK = os.getenv("BOT_NICK")
 CHANNEL = os.getenv("CHANNEL_NAME")
 
 npc = NPCEngine()
+
+
+async def human_delay(text):
+
+    words = len(
+        text.split()
+    )
+
+    delay = (
+        words * 0.25
+    ) + random.uniform(
+        1.0,
+        3.0
+    )
+
+    delay = max(
+        1.0,
+        min(delay, 6.0)
+    )
+
+    print(
+        f"DELAY: {delay:.1f}s"
+    )
+
+    await asyncio.sleep(
+        delay
+    )
 
 
 class Bot(commands.Bot):
@@ -64,6 +93,10 @@ class Bot(commands.Bot):
 
         if welcome_reply:
 
+            await human_delay(
+                welcome_reply
+            )
+
             await message.channel.send(
                 welcome_reply
             )
@@ -96,6 +129,10 @@ class Bot(commands.Bot):
             conn.close()
 
             if row:
+
+                await human_delay(
+                    "stats"
+                )
 
                 await message.channel.send(
                     f"@{username} έχεις γράψει {row[0]} μηνύματα στο chat."
@@ -130,6 +167,10 @@ class Bot(commands.Bot):
 
                 if reply:
 
+                    await human_delay(
+                        question
+                    )
+
                     await message.channel.send(
                         reply[:450]
                     )
@@ -154,6 +195,10 @@ class Bot(commands.Bot):
             )
 
             if reply:
+
+                await human_delay(
+                    content
+                )
 
                 await message.channel.send(
                     reply[:350]
