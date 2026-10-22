@@ -57,10 +57,18 @@ class Bot(commands.Bot):
             f"{username}: {content}"
         )
 
-        npc.process_message(
+        welcome_reply = npc.process_message(
             username,
             content
         )
+
+        if welcome_reply:
+
+            await message.channel.send(
+                welcome_reply
+            )
+
+            return
 
         if content.lower() == "!stats":
 

@@ -23,16 +23,24 @@ class NPCEngine:
     def __init__(self):
 
         self.social_memory = SocialMemory()
-        self.memory_extractor = MemoryExtractor()
 
-        self.affinity_manager = AffinityManager()
+        self.memory_extractor = (
+            MemoryExtractor()
+        )
+
+        self.affinity_manager = (
+            AffinityManager()
+        )
+
         self.affinity_manager.apply_decay()
 
         self.npc_memory = NPCMemory()
+
         self.npc_state = NPCState()
+
         self.returning_viewer = (
-    ReturningViewer()
-)
+            ReturningViewer()
+        )
 
     def save_user_message(
         self,
@@ -40,7 +48,10 @@ class NPCEngine:
         content
     ):
 
-        conn = sqlite3.connect("memory.db")
+        conn = sqlite3.connect(
+            "memory.db"
+        )
+
         cursor = conn.cursor()
 
         cursor.execute(
@@ -49,7 +60,10 @@ class NPCEngine:
             (username, message)
             VALUES (?, ?)
             """,
-            (username, content)
+            (
+                username,
+                content
+            )
         )
 
         cursor.execute(
@@ -96,17 +110,21 @@ class NPCEngine:
         content
     ):
 
-        memory = self.memory_extractor.extract(
-            username,
-            content
+        memory = (
+            self.memory_extractor.extract(
+                username,
+                content
+            )
         )
 
         if not memory:
             return
 
-        if self.social_memory.memory_exists(
-            username,
-            memory
+        if (
+            self.social_memory.memory_exists(
+                username,
+                memory
+            )
         ):
             return
 
@@ -126,16 +144,26 @@ class NPCEngine:
     ):
 
         self.npc_state.register_message()
-        if (
-    self.returning_viewer
-    .should_welcome_back(
-        username
-    )
-):
 
-    print(
-        f"{username} returned after long absence"
-    )
+        welcome_message = None
+
+        if (
+            self.returning_viewer
+            .should_welcome_back(
+                username
+            )
+        ):
+
+            if self.npc_state.can_reply():
+
+                welcome_message = (
+                    self.returning_viewer
+                    .welcome_message(
+                        username
+                    )
+                )
+
+                self.npc_state.register_reply()
 
         self.affinity_manager.increase(
             username,
@@ -151,6 +179,8 @@ class NPCEngine:
             username,
             content
         )
+
+        return welcome_message
 
     def maybe_generate_reply(
         self,

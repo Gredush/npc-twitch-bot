@@ -31,19 +31,28 @@ class ReturningViewer:
             )
         )
 
-        if days >= 180:
+        if days >= 365:
+
             return (
-                "xathikes arketa 😄"
+                f"re @{username}, xathikes enan xrono 😂"
+            )
+
+        if days >= 180:
+
+            return (
+                f"@{username} epistrofi meta apo poly kairo 👀"
             )
 
         if days >= 90:
+
             return (
-                "epistrofi meta apo poly kairo 👀"
+                f"@{username} xathikes re 😄"
             )
 
         if days >= 30:
+
             return (
-                "kalos ton 😄"
+                f"kalos ton @{username} 😄"
             )
 
         return None
