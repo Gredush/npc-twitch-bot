@@ -1,17 +1,24 @@
 from ai.utils.context_builder import build_chat_context
 from ai.providers.groq_provider import generate
+from conversation_awareness import ConversationAwareness
 
 
 def should_reply(username, message):
 
-    context = build_chat_context(25)
+    awareness = ConversationAwareness()
+
+    if awareness.looks_like_reply_to_npc(
+        username,
+        message
+    ):
+        return True
+
+    chat_context = build_chat_context(15)
 
     prompt = f"""
-Είσαι μέλος ενός Twitch chat.
+Είσαι viewer σε Twitch chat.
 
-Πρέπει να αποφασίσεις ΑΝ χρειάζεται να γράψεις μήνυμα.
-
-Απάντησε ΜΟΝΟ με:
+Απάντησε ΜΟΝΟ:
 
 YES
 
@@ -19,30 +26,31 @@ YES
 
 NO
 
-Κανόνες:
+YES μόνο αν:
 
-- Αν το chat είναι ήσυχο -> NO
-- Αν κάποιος είπε μόνο γεια -> NO
-- Αν κάποιος είπε μόνο lol -> NO
-- Αν δεν έχεις κάτι χρήσιμο να πεις -> NO
-- Αν υπάρχει αστεία στιγμή -> YES
-- Αν γίνεται συζήτηση -> YES
-- Αν υπάρχει ερώτηση που θα απαντούσε φυσιολογικά ένας viewer -> YES
+- συνεχίζεται συζήτηση
+- υπάρχει χιούμορ
+- υπάρχει ερώτηση
+- αξίζει να συμμετέχεις
+
+NO αν:
+
+- απλό γεια
+- μονόλεκτη απάντηση
+- δεν έχεις κάτι να προσθέσεις
 
 CHAT:
 
-{context}
+{chat_context}
 
-ΤΕΛΕΥΤΑΙΟ ΜΗΝΥΜΑ:
+ΝΕΟ ΜΗΝΥΜΑ:
 
 {username}: {message}
 """
 
-    response = generate(prompt)
+    result = generate(prompt)
 
-    if not response:
+    if not result:
         return False
 
-    response = response.strip().upper()
-
-    return "YES" in response
+    return "YES" in result.upper()

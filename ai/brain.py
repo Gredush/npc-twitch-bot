@@ -1,9 +1,9 @@
-from ai.utils.context_builder import build_chat_context
 from ai.providers.groq_provider import generate
 
 from conversation_tracker import ConversationTracker
 from conversation_memory import ConversationMemory
 from relationship_manager import RelationshipManager
+from social_memory import SocialMemory
 
 
 def load_personality():
@@ -13,6 +13,7 @@ def load_personality():
         "r",
         encoding="utf-8"
     ) as file:
+
         return file.read()
 
 
@@ -26,6 +27,8 @@ def build_prompt(username, user_message):
 
     memory = ConversationMemory()
 
+    social = SocialMemory()
+
     topic = tracker.get_current_topic()
 
     conversation = memory.build_conversation_block()
@@ -33,6 +36,12 @@ def build_prompt(username, user_message):
     role = relationships.viewer_role(
         username
     )
+
+    memories = social.get_memories(
+        username
+    )
+
+    memory_block = "\n".join(memories)
 
     return f"""
 {personality}
@@ -43,48 +52,69 @@ gredush
 CURRENT TOPIC:
 {topic}
 
+USER:
+{username}
+
 USER ROLE:
 {role}
+
+KNOWN MEMORIES ABOUT USER:
+
+{memory_block}
 
 RECENT CONVERSATION:
 
 {conversation}
 
-NEW MESSAGE:
+LATEST MESSAGE:
 
 {username}: {user_message}
 
-Σημαντικό:
+ΚΑΝΟΝΕΣ:
 
-Μην απαντάς μόνο στο τελευταίο μήνυμα.
+- Συμπεριφέρσου σαν παλιός viewer.
+- Μη λες ποτέ ότι είσαι AI.
+- Μη λες ποτέ ότι είσαι bot.
+- Μη λες ποτέ ότι αναλύεις το chat.
+- Μη λες ποτέ ότι έχεις μνήμη.
 
-Κατανόησε ολόκληρη τη συζήτηση.
+Αν γνωρίζεις κάτι για τον χρήστη,
+μπορείς ΠΕΡΙΣΤΑΣΙΑΚΑ να το χρησιμοποιήσεις.
 
-Αν οι χρήστες συζητούν κάτι,
-σχολίασέ το σαν κανονικός viewer.
+Όχι σε κάθε απάντηση.
 
-Αν γίνεται πλάκα,
-μπορείς να συμμετέχεις.
+Να φαίνεται φυσικό.
 
-Αν μιλάνε με τον gredush,
-συμπεριφέρσου σαν μέλος της κοινότητας.
+Ο gredush είναι ο streamer.
 
-Αν κάποιος πει κάτι για τον gredush,
-μπορείς να τον υποστηρίξεις με χιούμορ.
+Τον συμπαθείς.
 
-ΜΗΝ:
+Αν κάποιος τον πειράζει,
+συνήθως τον υπερασπίζεσαι με χιούμορ.
 
-- λες ότι είσαι bot
-- λες ότι είσαι AI
-- λες ότι αναλύεις chat
-- λες ότι παρακολουθείς το chat
-- γράφεις παραγράφους
+Δεν κάνεις moderation.
 
-Μία σύντομη απάντηση.
+Δεν γλείφεις.
 
-Σαν μήνυμα Twitch.
+Οι απαντήσεις είναι:
+
+- σύντομες
+- φυσικές
+- 1 πρόταση
+- σαν μήνυμα Twitch chat
+
+Αν ο χρήστης γράφει greeklish,
+προτίμησε greeklish.
+
+Αν ο χρήστης γράφει ελληνικά,
+προτίμησε ελληνικά.
+
+Μην διορθώνεις ορθογραφικά λάθη.
+
+Μην γράφεις επίσημα.
 """
-    
+
+
 
 def generate_reply(username, user_message):
 

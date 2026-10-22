@@ -7,10 +7,8 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 MODELS = [
-    "openai/gpt-oss-20b",
-    "openai/gpt-oss-120b",
     "qwen/qwen3.8-27b",
-    "allam-2-7b"
+    "openai/gpt-oss-20b"
 ]
 
 
@@ -30,7 +28,7 @@ def try_model(model_name, prompt):
             }
         ],
         "temperature": 0.8,
-        "max_tokens": 200
+        "max_tokens": 80
     }
 
     response = requests.post(
@@ -41,9 +39,6 @@ def try_model(model_name, prompt):
     )
 
     data = response.json()
-
-    print("\n========== FULL RESPONSE ==========\n")
-    print(data)
 
     if "choices" not in data:
         raise Exception(data)
@@ -57,20 +52,15 @@ def generate(prompt):
 
         try:
 
-            print(f"Trying model: {model}")
-
             reply = try_model(
                 model,
                 prompt
             )
 
-            print(f"SUCCESS: {model}")
+            if reply:
+                return reply
 
-            return reply
-
-        except Exception as e:
-
-            print(f"FAILED: {model}")
-            print(e)
+        except Exception:
+            continue
 
     return None

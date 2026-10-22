@@ -1,52 +1,30 @@
-from ai.providers.groq_provider import generate
-
-
 class MemoryExtractor:
+
+    TRIGGERS = [
+        "παίζω",
+        "δουλεύω",
+        "εργάζομαι",
+        "σπουδάζω",
+        "μένω",
+        "είμαι",
+        "μου αρέσει",
+        "λατρεύω",
+        "πήρα",
+        "αγόρασα",
+        "έχω"
+    ]
 
     def extract(self, username, message):
 
-        prompt = f"""
-Χρήστης:
+        text = message.lower()
 
-{username}
-
-Μήνυμα:
-
-{message}
-
-Πρέπει να αποφασίσεις αν υπάρχει προσωπική πληροφορία που αξίζει να θυμάται ένας φίλος.
-
-Παραδείγματα:
-
-"παίζω Rust"
--> ΠΑΙΖΕΙ_RUST
-
-"δουλεύω οδηγός"
--> ΔΟΥΛΕΥΕΙ_ΟΔΗΓΟΣ
-
-"πήρα μηχανή"
--> ΕΧΕΙ_ΜΗΧΑΝΗ
-
-"ωραίο stream"
--> NONE
-
-Απάντησε ΜΟΝΟ με:
-
-NONE
-
-ή
-
-μία σύντομη μνήμη.
-"""
-
-        result = generate(prompt)
-
-        if not result:
+        if len(text.split()) < 4:
             return None
 
-        result = result.strip()
+        for trigger in self.TRIGGERS:
 
-        if result.upper() == "NONE":
-            return None
+            if trigger in text:
 
-        return result
+                return message.strip()
+
+        return None

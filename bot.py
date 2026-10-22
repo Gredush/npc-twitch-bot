@@ -5,6 +5,8 @@ from ai.brain import generate_reply
 from ai.should_reply import should_reply
 
 from npc_state import NPCState
+from npc_memory import NPCMemory
+
 from social_memory import SocialMemory
 from memory_extractor import MemoryExtractor
 
@@ -18,6 +20,7 @@ BOT_NICK = os.getenv("BOT_NICK")
 CHANNEL = os.getenv("CHANNEL_NAME")
 
 npc_state = NPCState()
+npc_memory = NPCMemory()
 
 social_memory = SocialMemory()
 memory_extractor = MemoryExtractor()
@@ -80,7 +83,7 @@ class Bot(commands.Bot):
             print("MEMORY ERROR:", e)
 
         # ======================
-        # SAVE MESSAGE
+        # SAVE USER MESSAGE
         # ======================
 
         conn = sqlite3.connect("memory.db")
@@ -88,10 +91,14 @@ class Bot(commands.Bot):
 
         cursor.execute(
             """
-            INSERT INTO messages (username, message)
+            INSERT INTO messages
+            (username, message)
             VALUES (?, ?)
             """,
-            (username, content)
+            (
+                username,
+                content
+            )
         )
 
         cursor.execute(
@@ -116,8 +123,6 @@ class Bot(commands.Bot):
                 (username,)
             )
 
-            print(f"New viewer: {username}")
-
         else:
 
             cursor.execute(
@@ -135,7 +140,7 @@ class Bot(commands.Bot):
         conn.close()
 
         # ======================
-        # !stats
+        # STATS
         # ======================
 
         if content.lower() == "!stats":
@@ -165,7 +170,7 @@ class Bot(commands.Bot):
             return
 
         # ======================
-        # !ai DEBUG COMMAND
+        # DEBUG AI
         # ======================
 
         if content.lower().startswith("!ai"):
@@ -197,6 +202,10 @@ class Bot(commands.Bot):
                         reply[:450]
                     )
 
+                    npc_memory.save_npc_message(
+                        reply[:450]
+                    )
+
             except Exception as e:
 
                 print("AI ERROR:", e)
@@ -204,7 +213,7 @@ class Bot(commands.Bot):
             return
 
         # ======================
-        # AUTO NPC MODE
+        # AUTO NPC
         # ======================
 
         try:
@@ -233,6 +242,10 @@ class Bot(commands.Bot):
                         )
 
                         await message.channel.send(
+                            reply[:350]
+                        )
+
+                        npc_memory.save_npc_message(
                             reply[:350]
                         )
 
