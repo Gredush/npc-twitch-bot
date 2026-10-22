@@ -1,6 +1,7 @@
 from twitchio.ext import commands
 from dotenv import load_dotenv
 import os
+import sqlite3
 
 load_dotenv()
 
@@ -27,11 +28,88 @@ class Bot(commands.Bot):
         if message.echo:
             return
 
-        print(f"{message.author.name}: {message.content}")
+        username = message.author.name
+        content = message.content
 
-        if "kalimera" in message.content.lower():
+        print(f"{username}: {content}")
+
+        conn = sqlite3.connect("memory.db")
+        cursor = conn.cursor()
+
+        # Αποθήκευση μηνύματος
+        cursor.execute(
+            """
+            INSERT INTO messages (username, message)
+            VALUES (?, ?)
+            """,
+            (username, content)
+        )
+
+        # Έλεγχος αν υπάρχει viewer profile
+        cursor.execute(
+            """
+            SELECT username
+            FROM viewers
+            WHERE username = ?
+            """,
+            (username,)
+        )
+
+        viewer = cursor.fetchone()
+
+        if viewer is None:
+            cursor.execute(
+                """
+                INSERT INTO viewers
+                (username, message_count)
+                VALUES (?, 1)
+                """,
+                (username,)
+            )
+
+            print(f"New viewer detected: {username}")
+
+        else:
+            cursor.execute(
+                """
+                UPDATE viewers
+                SET
+                    message_count = message_count + 1,
+                    last_seen = CURRENT_TIMESTAMP
+                WHERE username = ?
+                """,
+                (username,)
+            )
+
+        conn.commit()
+        conn.close()
+
+        if content.lower() == "!stats":
+
+            conn = sqlite3.connect("memory.db")
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT message_count
+                FROM viewers
+                WHERE username = ?
+                """,
+                (username,)
+            )
+
+            result = cursor.fetchone()
+
+            conn.close()
+
+            if result:
+                await message.channel.send(
+                    f"@{username} έχεις γράψει {result[0]} μηνύματα στο chat."
+                )
+
+        if "kalimera" in content.lower():
             await message.channel.send(
-                f"Kalimera @{message.author.name}!"
+                f"Kalimera @{username}!"
             )
 
         await self.handle_commands(message)
