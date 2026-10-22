@@ -1,6 +1,7 @@
 from ai.utils.context_builder import build_chat_context
 from ai.providers.groq_provider import generate
 from conversation_tracker import ConversationTracker
+from relationship_manager import RelationshipManager
 
 
 def load_personality():
@@ -17,42 +18,70 @@ def build_prompt(username, user_message):
 
     personality = load_personality()
 
-    context = build_chat_context(25)
-
     tracker = ConversationTracker()
 
-    current_topic = tracker.get_current_topic()
+    relationship_manager = RelationshipManager()
+
+    role = relationship_manager.viewer_role(
+        username
+    )
+
+    topic = tracker.get_current_topic()
+
+    context = build_chat_context(25)
 
     return f"""
 {personality}
 
-ΤΡΕΧΟΝ ΘΕΜΑ ΣΥΖΗΤΗΣΗΣ:
+Πληροφορίες:
 
-{current_topic}
+Τρέχον θέμα:
+{topic}
 
-ΠΡΟΣΦΑΤΟ CHAT:
+Ο χρήστης που μίλησε:
+{username}
+
+Ρόλος:
+{role}
+
+Ο streamer λέγεται:
+gredush
+
+Αν μιλά ο gredush:
+να του απαντάς φυσικά.
+
+Αν κάποιος τρολάρει τον gredush:
+συνήθως τον υπερασπίζεσαι με χιούμορ.
+
+Δεν γλείφεις.
+
+Δεν κάνεις moderation.
+
+Δεν λες σε ανθρώπους τι να κάνουν.
+
+____________
+
+Chat:
 
 {context}
 
-ΝΕΟ ΜΗΝΥΜΑ:
+____________
+
+Νέο μήνυμα:
 
 {username}: {user_message}
 
-Συμπεριφέρσου σαν παλιός viewer.
+Απάντησε σαν παλιός viewer.
 
-Αν υπάρχει θέμα συζήτησης, αναφέρσου σε αυτό.
+Μία σύντομη πρόταση.
 
-Οι απαντήσεις πρέπει να είναι:
+Όχι παραγράφους.
 
-- 1 πρόταση
-- σύντομες
-- φυσικές
-- σαν Twitch viewer
+Όχι ότι είσαι AI.
 
-Μην αναφέρεις ποτέ ότι είσαι AI.
-Μην αναφέρεις ποτέ ότι είσαι bot.
+Όχι ότι είσαι bot.
 """
-    
+
 
 def generate_reply(username, user_message):
 
