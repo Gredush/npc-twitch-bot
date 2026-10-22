@@ -1,19 +1,10 @@
 from twitchio.ext import commands
 from dotenv import load_dotenv
 
-from ai.brain import generate_reply
-from ai.should_reply import should_reply
+from npc_engine import NPCEngine
 
-from npc_state import NPCState
-from npc_memory import NPCMemory
-
-from social_memory import SocialMemory
-from memory_extractor import MemoryExtractor
-
-from reply_memory_instance import reply_memory
-
-import os
 import sqlite3
+import os
 
 load_dotenv()
 
@@ -21,114 +12,62 @@ TOKEN = os.getenv("BOT_TOKEN")
 BOT_NICK = os.getenv("BOT_NICK")
 CHANNEL = os.getenv("CHANNEL_NAME")
 
-npc_state = NPCState()
-npc_memory = NPCMemory()
-
-social_memory = SocialMemory()
-memory_extractor = MemoryExtractor()
+npc = NPCEngine()
 
 
 class Bot(commands.Bot):
 
     def __init__(self):
+
         super().__init__(
             token=TOKEN,
             prefix="!",
-            initial_channels=[CHANNEL]
+            initial_channels=[
+                CHANNEL
+            ]
         )
 
     async def event_ready(self):
-        print(f"{BOT_NICK} connected!")
-        print(f"Watching: {CHANNEL}")
 
-    async def event_message(self, message):
+        print(
+            f"{BOT_NICK} connected!"
+        )
+
+        print(
+            f"Watching: {CHANNEL}"
+        )
+
+    async def event_message(
+        self,
+        message
+    ):
 
         if message.echo:
             return
 
-        username = message.author.name
-        content = message.content.strip()
-
-        print(f"{username}: {content}")
-
-        npc_state.register_message()
-
-        try:
-
-            memory = memory_extractor.extract(
-                username,
-                content
-            )
-
-            if memory:
-
-                if not social_memory.memory_exists(
-                    username,
-                    memory
-                ):
-
-                    social_memory.save_memory(
-                        username,
-                        memory
-                    )
-
-        except Exception as e:
-
-            print("MEMORY ERROR:", e)
-
-        conn = sqlite3.connect("memory.db")
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            INSERT INTO messages
-            (username, message)
-            VALUES (?, ?)
-            """,
-            (username, content)
+        username = (
+            message.author.name
         )
 
-        cursor.execute(
-            """
-            SELECT username
-            FROM viewers
-            WHERE username = ?
-            """,
-            (username,)
+        content = (
+            message.content.strip()
         )
 
-        viewer = cursor.fetchone()
+        print(
+            f"{username}: {content}"
+        )
 
-        if viewer is None:
-
-            cursor.execute(
-                """
-                INSERT INTO viewers
-                (username, message_count)
-                VALUES (?, 1)
-                """,
-                (username,)
-            )
-
-        else:
-
-            cursor.execute(
-                """
-                UPDATE viewers
-                SET
-                    message_count = message_count + 1,
-                    last_seen = CURRENT_TIMESTAMP
-                WHERE username = ?
-                """,
-                (username,)
-            )
-
-        conn.commit()
-        conn.close()
+        npc.process_message(
+            username,
+            content
+        )
 
         if content.lower() == "!stats":
 
-            conn = sqlite3.connect("memory.db")
+            conn = sqlite3.connect(
+                "memory.db"
+            )
+
             cursor = conn.cursor()
 
             cursor.execute(
@@ -152,14 +91,16 @@ class Bot(commands.Bot):
 
             return
 
-        if content.lower().startswith("!ai"):
+        if content.lower().startswith(
+            "!ai"
+        ):
 
             question = content[3:].strip()
 
             if not question:
                 return
 
-            reply = generate_reply(
+            reply = npc.maybe_generate_reply(
                 username,
                 question
             )
@@ -170,51 +111,22 @@ class Bot(commands.Bot):
                     reply[:450]
                 )
 
-                npc_memory.save_npc_message(
-                    reply[:450]
-                )
-
-                reply_memory.register_npc_message(
-                    reply[:450]
-                )
-
             return
 
-        try:
+        reply = npc.maybe_generate_reply(
+            username,
+            content
+        )
 
-            if npc_state.can_reply():
+        if reply:
 
-                if should_reply(
-                    username,
-                    content
-                ):
+            await message.channel.send(
+                reply[:350]
+            )
 
-                    reply = generate_reply(
-                        username,
-                        content
-                    )
-
-                    if reply:
-
-                        await message.channel.send(
-                            reply[:350]
-                        )
-
-                        npc_memory.save_npc_message(
-                            reply[:350]
-                        )
-
-                        reply_memory.register_npc_message(
-                            reply[:350]
-                        )
-
-                        npc_state.register_reply()
-
-        except Exception as e:
-
-            print("NPC ERROR:", e)
-
-        await self.handle_commands(message)
+        await self.handle_commands(
+            message
+        )
 
 
 bot = Bot()
