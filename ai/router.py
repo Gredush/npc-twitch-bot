@@ -1,26 +1,38 @@
-from ai.providers.groq_provider import generate as groq_generate
-from ai.providers.gemini_provider import generate as gemini_generate
-from ai.providers.openrouter_provider import generate as openrouter_generate
+from ai.providers.groq_provider import (
+    generate as groq_generate
+)
+
+from ai.providers.gemini_provider import (
+    generate as gemini_generate
+)
 
 
 def generate(prompt):
 
     try:
-        return groq_generate(prompt)
+
+        reply = groq_generate(prompt)
+
+        if reply:
+            return reply
 
     except Exception as e:
-        print(f"GROQ FAILED: {e}")
+
+        print(
+            f"GROQ FAILED: {e}"
+        )
 
     try:
-        return gemini_generate(prompt)
+
+        reply = gemini_generate(prompt)
+
+        if reply:
+            return reply
 
     except Exception as e:
-        print(f"GEMINI FAILED: {e}")
 
-    try:
-        return openrouter_generate(prompt)
-
-    except Exception as e:
-        print(f"OPENROUTER FAILED: {e}")
+        print(
+            f"GEMINI FAILED: {e}"
+        )
 
     return "den ksero re 😄"
