@@ -27,7 +27,7 @@ def try_model(model_name, prompt):
                 "content": prompt
             }
         ],
-        "temperature": 0.8,
+        "temperature": 0.3,
         "max_tokens": 80
     }
 

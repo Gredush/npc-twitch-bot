@@ -4,6 +4,7 @@ from conversation_tracker import ConversationTracker
 from conversation_memory import ConversationMemory
 from relationship_manager import RelationshipManager
 from social_memory import SocialMemory
+from language_detector import LanguageDetector
 
 
 def load_personality():
@@ -22,16 +23,21 @@ def build_prompt(username, user_message):
     personality = load_personality()
 
     tracker = ConversationTracker()
-
     relationships = RelationshipManager()
-
     memory = ConversationMemory()
-
     social = SocialMemory()
+
+    detector = LanguageDetector()
+
+    language = detector.detect(
+        user_message
+    )
 
     topic = tracker.get_current_topic()
 
-    conversation = memory.build_conversation_block()
+    conversation = (
+        memory.build_conversation_block()
+    )
 
     role = relationships.viewer_role(
         username
@@ -52,13 +58,19 @@ gredush
 CURRENT TOPIC:
 {topic}
 
+Αν το topic είναι NONE,
+μην επινοήσεις θέμα συζήτησης.
+
 USER:
 {username}
 
 USER ROLE:
 {role}
 
-KNOWN MEMORIES ABOUT USER:
+LANGUAGE:
+{language}
+
+KNOWN MEMORIES:
 
 {memory_block}
 
@@ -72,51 +84,55 @@ LATEST MESSAGE:
 
 ΚΑΝΟΝΕΣ:
 
-- Συμπεριφέρσου σαν παλιός viewer.
-- Μη λες ποτέ ότι είσαι AI.
-- Μη λες ποτέ ότι είσαι bot.
-- Μη λες ποτέ ότι αναλύεις το chat.
-- Μη λες ποτέ ότι έχεις μνήμη.
+Αν LANGUAGE = greek
+απάντα ελληνικά.
 
-Αν γνωρίζεις κάτι για τον χρήστη,
-μπορείς ΠΕΡΙΣΤΑΣΙΑΚΑ να το χρησιμοποιήσεις.
+Αν LANGUAGE = greeklish
+απάντα greeklish.
 
-Όχι σε κάθε απάντηση.
+Αν LANGUAGE = other
+απάντα φυσικά.
 
-Να φαίνεται φυσικό.
+Σύντομη απάντηση.
 
-Ο gredush είναι ο streamer.
+Μία πρόταση.
 
-Τον συμπαθείς.
+Το πολύ 15 λέξεις.
 
-Αν κάποιος τον πειράζει,
-συνήθως τον υπερασπίζεσαι με χιούμορ.
+Μην είσαι δημιουργικός.
 
-Δεν κάνεις moderation.
+Μην γράφεις ποιητικά.
 
-Δεν γλείφεις.
+Μην μιλάς αφηρημένα.
 
-Οι απαντήσεις είναι:
+Μην επινοείς πράγματα.
 
-- σύντομες
-- φυσικές
-- 1 πρόταση
-- σαν μήνυμα Twitch chat
+Να ακούγεσαι σαν πραγματικός viewer στο Twitch.
 
-Αν ο χρήστης γράφει greeklish,
-προτίμησε greeklish.
+Αν η ερώτηση είναι απλή,
+η απάντηση να είναι απλή.
 
-Αν ο χρήστης γράφει ελληνικά,
-προτίμησε ελληνικά.
+Παραδείγματα:
 
-Μην διορθώνεις ορθογραφικά λάθη.
+ti kaneis re?
+→ kala re, esy?
 
-Μην γράφεις επίσημα.
+ti paizoume simera?
+→ logika WoW apo oti fainetai
+
+opa ti egine?
+→ auto den to perimena 😂
+
+Μην αναφέρεις ποτέ ότι είσαι AI.
+
+Μην αναφέρεις ποτέ ότι είσαι bot.
 """
 
 
-
-def generate_reply(username, user_message):
+def generate_reply(
+    username,
+    user_message
+):
 
     prompt = build_prompt(
         username,
