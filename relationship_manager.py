@@ -1,4 +1,5 @@
 import sqlite3
+from affinity_manager import AffinityManager
 
 
 class RelationshipManager:
@@ -32,12 +33,21 @@ class RelationshipManager:
         if username.lower() == "gredush":
             return "streamer"
 
-        info = self.get_viewer_info(username)
+        info = self.get_viewer_info(
+            username
+        )
 
         if not info:
             return "new_viewer"
 
         count = info[1]
+
+        affinity = AffinityManager().get_score(
+            username
+        )
+
+        if affinity >= 100:
+            return "close_friend"
 
         if count >= 500:
             return "veteran"

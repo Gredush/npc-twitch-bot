@@ -5,6 +5,7 @@ from conversation_memory import ConversationMemory
 from relationship_manager import RelationshipManager
 from social_memory import SocialMemory
 from language_detector import LanguageDetector
+from affinity_manager import AffinityManager
 
 
 def load_personality():
@@ -26,7 +27,6 @@ def build_prompt(username, user_message):
     relationships = RelationshipManager()
     memory = ConversationMemory()
     social = SocialMemory()
-
     detector = LanguageDetector()
 
     language = detector.detect(
@@ -40,6 +40,10 @@ def build_prompt(username, user_message):
     )
 
     role = relationships.viewer_role(
+        username
+    )
+
+    affinity = AffinityManager().get_score(
         username
     )
 
@@ -58,14 +62,21 @@ gredush
 CURRENT TOPIC:
 {topic}
 
-Αν το topic είναι NONE,
-μην επινοήσεις θέμα συζήτησης.
+Αν υπάρχει topic,
+προτίμησε να παραμείνεις σε αυτό.
+
+Μην αλλάζεις θέμα εύκολα.
+
+Ένα μεμονωμένο μήνυμα δεν σημαίνει ότι άλλαξε η συζήτηση.
 
 USER:
 {username}
 
 USER ROLE:
 {role}
+
+AFFINITY:
+{affinity}
 
 LANGUAGE:
 {language}
@@ -92,6 +103,22 @@ LATEST MESSAGE:
 
 Αν LANGUAGE = other
 απάντα φυσικά.
+
+Αν γνωρίζεις κάτι για τον χρήστη,
+μπορείς περιστασιακά να το χρησιμοποιήσεις.
+
+Όχι σε κάθε απάντηση.
+
+Ο gredush είναι ο streamer.
+
+Τον συμπαθείς.
+
+Αν κάποιος τον πειράζει,
+συνήθως τον υποστηρίζεις με χιούμορ.
+
+Δεν κάνεις moderation.
+
+Δεν γλείφεις.
 
 Σύντομη απάντηση.
 
