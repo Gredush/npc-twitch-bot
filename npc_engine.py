@@ -13,6 +13,10 @@ from npc_state import NPCState
 
 from reply_memory_instance import reply_memory
 
+from returning_viewer import (
+    ReturningViewer
+)
+
 
 class NPCEngine:
 
@@ -22,9 +26,13 @@ class NPCEngine:
         self.memory_extractor = MemoryExtractor()
 
         self.affinity_manager = AffinityManager()
+        self.affinity_manager.apply_decay()
 
         self.npc_memory = NPCMemory()
         self.npc_state = NPCState()
+        self.returning_viewer = (
+    ReturningViewer()
+)
 
     def save_user_message(
         self,
@@ -118,6 +126,16 @@ class NPCEngine:
     ):
 
         self.npc_state.register_message()
+        if (
+    self.returning_viewer
+    .should_welcome_back(
+        username
+    )
+):
+
+    print(
+        f"{username} returned after long absence"
+    )
 
         self.affinity_manager.increase(
             username,

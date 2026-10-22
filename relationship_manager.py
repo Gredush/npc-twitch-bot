@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 from affinity_manager import AffinityManager
 
 
@@ -42,8 +43,9 @@ class RelationshipManager:
 
         count = info[1]
 
-        affinity = AffinityManager().get_score(
-            username
+        affinity = (
+            AffinityManager()
+            .get_score(username)
         )
 
         if affinity >= 100:
@@ -56,3 +58,36 @@ class RelationshipManager:
             return "regular"
 
         return "new_viewer"
+
+    def returning_viewer_days(
+        self,
+        username
+    ):
+
+        info = self.get_viewer_info(
+            username
+        )
+
+        if not info:
+            return 0
+
+        last_seen = info[3]
+
+        if not last_seen:
+            return 0
+
+        try:
+
+            last_seen_dt = (
+                datetime.fromisoformat(
+                    last_seen
+                )
+            )
+
+            return (
+                datetime.now()
+                - last_seen_dt
+            ).days
+
+        except Exception:
+            return 0

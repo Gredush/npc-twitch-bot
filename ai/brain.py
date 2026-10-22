@@ -47,8 +47,9 @@ def build_prompt(username, user_message):
         username
     )
 
-    memories = social.get_memories(
-        username
+    memories = social.get_relevant_memories(
+        username,
+        user_message
     )
 
     memory_block = "\n".join(memories)
@@ -67,7 +68,8 @@ CURRENT TOPIC:
 
 Μην αλλάζεις θέμα εύκολα.
 
-Ένα μεμονωμένο μήνυμα δεν σημαίνει ότι άλλαξε η συζήτηση.
+Ένα μεμονωμένο μήνυμα δεν σημαίνει
+ότι άλλαξε η συζήτηση.
 
 USER:
 {username}
@@ -82,6 +84,13 @@ LANGUAGE:
 {language}
 
 KNOWN MEMORIES:
+
+Οι παρακάτω μνήμες θεωρούνται σχετικές
+με το τρέχον μήνυμα.
+
+Μην αναφέρεις όλες.
+
+Χρησιμοποίησε τες μόνο αν βοηθούν φυσικά.
 
 {memory_block}
 
