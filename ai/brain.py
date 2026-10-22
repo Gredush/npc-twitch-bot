@@ -1,6 +1,8 @@
 from ai.utils.context_builder import build_chat_context
 from ai.providers.groq_provider import generate
+
 from conversation_tracker import ConversationTracker
+from conversation_memory import ConversationMemory
 from relationship_manager import RelationshipManager
 
 
@@ -20,68 +22,69 @@ def build_prompt(username, user_message):
 
     tracker = ConversationTracker()
 
-    relationship_manager = RelationshipManager()
+    relationships = RelationshipManager()
 
-    role = relationship_manager.viewer_role(
-        username
-    )
+    memory = ConversationMemory()
 
     topic = tracker.get_current_topic()
 
-    context = build_chat_context(25)
+    conversation = memory.build_conversation_block()
+
+    role = relationships.viewer_role(
+        username
+    )
 
     return f"""
 {personality}
 
-Πληροφορίες:
-
-Τρέχον θέμα:
-{topic}
-
-Ο χρήστης που μίλησε:
-{username}
-
-Ρόλος:
-{role}
-
-Ο streamer λέγεται:
+STREAMER:
 gredush
 
-Αν μιλά ο gredush:
-να του απαντάς φυσικά.
+CURRENT TOPIC:
+{topic}
 
-Αν κάποιος τρολάρει τον gredush:
-συνήθως τον υπερασπίζεσαι με χιούμορ.
+USER ROLE:
+{role}
 
-Δεν γλείφεις.
+RECENT CONVERSATION:
 
-Δεν κάνεις moderation.
+{conversation}
 
-Δεν λες σε ανθρώπους τι να κάνουν.
-
-____________
-
-Chat:
-
-{context}
-
-____________
-
-Νέο μήνυμα:
+NEW MESSAGE:
 
 {username}: {user_message}
 
-Απάντησε σαν παλιός viewer.
+Σημαντικό:
 
-Μία σύντομη πρόταση.
+Μην απαντάς μόνο στο τελευταίο μήνυμα.
 
-Όχι παραγράφους.
+Κατανόησε ολόκληρη τη συζήτηση.
 
-Όχι ότι είσαι AI.
+Αν οι χρήστες συζητούν κάτι,
+σχολίασέ το σαν κανονικός viewer.
 
-Όχι ότι είσαι bot.
+Αν γίνεται πλάκα,
+μπορείς να συμμετέχεις.
+
+Αν μιλάνε με τον gredush,
+συμπεριφέρσου σαν μέλος της κοινότητας.
+
+Αν κάποιος πει κάτι για τον gredush,
+μπορείς να τον υποστηρίξεις με χιούμορ.
+
+ΜΗΝ:
+
+- λες ότι είσαι bot
+- λες ότι είσαι AI
+- λες ότι αναλύεις chat
+- λες ότι παρακολουθείς το chat
+- γράφεις παραγράφους
+
+Μία σύντομη απάντηση.
+
+Σαν μήνυμα Twitch.
 """
-
+    
 
 def generate_reply(username, user_message):
 

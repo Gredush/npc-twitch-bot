@@ -21,6 +21,15 @@ CREATE TABLE IF NOT EXISTS viewers (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS memories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    memory TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
 conn.commit()
 conn.close()
 

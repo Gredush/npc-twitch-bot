@@ -3,7 +3,10 @@ from dotenv import load_dotenv
 
 from ai.brain import generate_reply
 from ai.should_reply import should_reply
+
 from npc_state import NPCState
+from social_memory import SocialMemory
+from memory_extractor import MemoryExtractor
 
 import os
 import sqlite3
@@ -15,6 +18,9 @@ BOT_NICK = os.getenv("BOT_NICK")
 CHANNEL = os.getenv("CHANNEL_NAME")
 
 npc_state = NPCState()
+
+social_memory = SocialMemory()
+memory_extractor = MemoryExtractor()
 
 
 class Bot(commands.Bot):
@@ -40,11 +46,41 @@ class Bot(commands.Bot):
 
         print(f"{username}: {content}")
 
-        # Register message in NPC state
         npc_state.register_message()
 
         # ======================
-        # SAVE TO DATABASE
+        # MEMORY EXTRACTION
+        # ======================
+
+        try:
+
+            memory = memory_extractor.extract(
+                username,
+                content
+            )
+
+            if memory:
+
+                if not social_memory.memory_exists(
+                    username,
+                    memory
+                ):
+
+                    social_memory.save_memory(
+                        username,
+                        memory
+                    )
+
+                    print(
+                        f"NEW MEMORY: {username} -> {memory}"
+                    )
+
+        except Exception as e:
+
+            print("MEMORY ERROR:", e)
+
+        # ======================
+        # SAVE MESSAGE
         # ======================
 
         conn = sqlite3.connect("memory.db")
@@ -153,6 +189,7 @@ class Bot(commands.Bot):
                         .replace("\n", " ")
                         .replace("🤖", "")
                         .replace("AI", "")
+                        .replace("bot", "")
                         .strip()
                     )
 
@@ -174,7 +211,10 @@ class Bot(commands.Bot):
 
             if npc_state.can_reply():
 
-                if should_reply(username, content):
+                if should_reply(
+                    username,
+                    content
+                ):
 
                     reply = generate_reply(
                         username,
@@ -188,7 +228,7 @@ class Bot(commands.Bot):
                             .replace("\n", " ")
                             .replace("🤖", "")
                             .replace("AI", "")
-                            .replace("είμαι bot", "")
+                            .replace("bot", "")
                             .strip()
                         )
 
@@ -201,16 +241,6 @@ class Bot(commands.Bot):
         except Exception as e:
 
             print("NPC ERROR:", e)
-
-        # ======================
-        # LEGACY TEST
-        # ======================
-
-        if "kalimera" in content.lower():
-
-            await message.channel.send(
-                f"Kalimera @{username}!"
-            )
 
         await self.handle_commands(message)
 
