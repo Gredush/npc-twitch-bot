@@ -31,7 +31,7 @@ class Bot(commands.Bot):
             return
 
         username = message.author.name
-        content = message.content
+        content = message.content.strip()
 
         print(f"{username}: {content}")
 
@@ -84,7 +84,7 @@ class Bot(commands.Bot):
         conn.commit()
         conn.close()
 
-        # STATS
+        # Viewer stats
 
         if content.lower() == "!stats":
 
@@ -112,23 +112,14 @@ class Bot(commands.Bot):
 
             return
 
-        # AI COMMAND
+        # AI debug command
 
         if content.lower().startswith("!ai"):
 
             question = content[3:].strip()
 
             if not question:
-
-                await message.channel.send(
-                    f"@{username} γράψε κάτι μετά το !ai"
-                )
-
                 return
-
-            await message.channel.send(
-                "🤖 Σκέφτομαι..."
-            )
 
             try:
 
@@ -139,21 +130,26 @@ class Bot(commands.Bot):
 
                 if reply:
 
-                    reply = reply.replace("\n", " ")
+                    clean_reply = (
+                        reply
+                        .replace("\n", " ")
+                        .replace("🤖", "")
+                        .replace("AI", "")
+                        .replace("είμαι bot", "")
+                        .strip()
+                    )
 
                     await message.channel.send(
-                        reply[:450]
+                        clean_reply[:450]
                     )
 
             except Exception as e:
 
-                print(e)
-
-                await message.channel.send(
-                    "⚠️ Κάτι πήγε στραβά με το AI."
-                )
+                print("AI ERROR:", e)
 
             return
+
+        # Legacy response
 
         if "kalimera" in content.lower():
 
