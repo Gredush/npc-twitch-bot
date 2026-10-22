@@ -10,6 +10,8 @@ from npc_memory import NPCMemory
 from social_memory import SocialMemory
 from memory_extractor import MemoryExtractor
 
+from reply_memory_instance import reply_memory
+
 import os
 import sqlite3
 
@@ -51,10 +53,6 @@ class Bot(commands.Bot):
 
         npc_state.register_message()
 
-        # ======================
-        # MEMORY EXTRACTION
-        # ======================
-
         try:
 
             memory = memory_extractor.extract(
@@ -74,17 +72,9 @@ class Bot(commands.Bot):
                         memory
                     )
 
-                    print(
-                        f"NEW MEMORY: {username} -> {memory}"
-                    )
-
         except Exception as e:
 
             print("MEMORY ERROR:", e)
-
-        # ======================
-        # SAVE USER MESSAGE
-        # ======================
 
         conn = sqlite3.connect("memory.db")
         cursor = conn.cursor()
@@ -95,10 +85,7 @@ class Bot(commands.Bot):
             (username, message)
             VALUES (?, ?)
             """,
-            (
-                username,
-                content
-            )
+            (username, content)
         )
 
         cursor.execute(
@@ -139,10 +126,6 @@ class Bot(commands.Bot):
         conn.commit()
         conn.close()
 
-        # ======================
-        # STATS
-        # ======================
-
         if content.lower() == "!stats":
 
             conn = sqlite3.connect("memory.db")
@@ -157,21 +140,17 @@ class Bot(commands.Bot):
                 (username,)
             )
 
-            result = cursor.fetchone()
+            row = cursor.fetchone()
 
             conn.close()
 
-            if result:
+            if row:
 
                 await message.channel.send(
-                    f"@{username} έχεις γράψει {result[0]} μηνύματα στο chat."
+                    f"@{username} έχεις γράψει {row[0]} μηνύματα στο chat."
                 )
 
             return
-
-        # ======================
-        # DEBUG AI
-        # ======================
 
         if content.lower().startswith("!ai"):
 
@@ -180,41 +159,26 @@ class Bot(commands.Bot):
             if not question:
                 return
 
-            try:
+            reply = generate_reply(
+                username,
+                question
+            )
 
-                reply = generate_reply(
-                    username,
-                    question
+            if reply:
+
+                await message.channel.send(
+                    reply[:450]
                 )
 
-                if reply:
+                npc_memory.save_npc_message(
+                    reply[:450]
+                )
 
-                    reply = (
-                        reply
-                        .replace("\n", " ")
-                        .replace("🤖", "")
-                        .replace("AI", "")
-                        .replace("bot", "")
-                        .strip()
-                    )
-
-                    await message.channel.send(
-                        reply[:450]
-                    )
-
-                    npc_memory.save_npc_message(
-                        reply[:450]
-                    )
-
-            except Exception as e:
-
-                print("AI ERROR:", e)
+                reply_memory.register_npc_message(
+                    reply[:450]
+                )
 
             return
-
-        # ======================
-        # AUTO NPC
-        # ======================
 
         try:
 
@@ -232,20 +196,15 @@ class Bot(commands.Bot):
 
                     if reply:
 
-                        reply = (
-                            reply
-                            .replace("\n", " ")
-                            .replace("🤖", "")
-                            .replace("AI", "")
-                            .replace("bot", "")
-                            .strip()
-                        )
-
                         await message.channel.send(
                             reply[:350]
                         )
 
                         npc_memory.save_npc_message(
+                            reply[:350]
+                        )
+
+                        reply_memory.register_npc_message(
                             reply[:350]
                         )
 

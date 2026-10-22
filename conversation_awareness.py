@@ -1,31 +1,7 @@
-import sqlite3
+from reply_memory_instance import reply_memory
 
 
 class ConversationAwareness:
-
-    def get_last_npc_message(self):
-
-        conn = sqlite3.connect("memory.db")
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            SELECT message
-            FROM messages
-            WHERE username = 'KynigaoBot'
-            ORDER BY id DESC
-            LIMIT 1
-            """
-        )
-
-        row = cursor.fetchone()
-
-        conn.close()
-
-        if not row:
-            return None
-
-        return row[0]
 
     def looks_like_reply_to_npc(
         self,
@@ -33,23 +9,28 @@ class ConversationAwareness:
         message
     ):
 
+        recent = reply_memory.recent_npc_message()
+
+        if recent is None:
+            return False
+
         text = message.lower()
 
         triggers = [
             "εσύ",
             "esy",
-            "λες",
-            "λες;",
             "τι λες",
-            "re",
-            "ρε",
-            "σοβαρά",
+            "λες",
+            "καλά",
+            "kala",
             "όντως",
             "ontws",
+            "γιατί",
+            "giati",
             "χαχα",
             "xaxa",
-            "καλά",
-            "kala"
+            "αυτό",
+            "auto"
         ]
 
         for trigger in triggers:
