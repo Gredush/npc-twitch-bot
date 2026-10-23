@@ -274,15 +274,15 @@ class NPCEngine:
                     replies
                 )
 
-        return None
+            return None
 
-        def maybe_generate_reply(
+    def maybe_generate_reply(
         self,
         username,
         content,
         force_reply=False,
         mentioned=False
-    ):
+        ):
 
         print(
             "DEBUG: maybe_generate_reply called"
