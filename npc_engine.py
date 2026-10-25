@@ -254,15 +254,16 @@ class NPCEngine:
         print(
             "DEBUG: maybe_generate_reply called"
         )
-        common = self.try_common_reply(
-            content
-        )
-        if common:
-            print(
-                f"DEBUG COMMON: {common}"
-            )
-            return common
         if not force_reply:
+            common = self.try_common_reply(
+                content
+            )
+            if common:
+                print(
+                    f"DEBUG COMMON: {common}"
+                )
+                return common
+
             if not self.npc_state.can_reply():
                 print(
                     "DEBUG: can_reply = False"
