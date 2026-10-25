@@ -16,7 +16,7 @@ class NPCState:
 
         # Τουλάχιστον 10 μηνύματα από τότε που μίλησε
 
-        if self.messages_since_reply < 10:
+        if self.messages_since_reply < 4:
             return False
 
         # Πρώτη φορά
@@ -26,11 +26,16 @@ class NPCState:
 
         # Cooldown 3 λεπτών
 
-        cooldown = timedelta(minutes=3)
+        cooldown = timedelta(minutes=1)
 
         if datetime.now() - self.last_reply_time < cooldown:
             return False
 
+        return True
+
+
+    def force_reply(self):
+        """Επιτρέπει απάντηση αμέσως (π.χ. όταν γίνεται mention)."""
         return True
 
     def register_reply(self):

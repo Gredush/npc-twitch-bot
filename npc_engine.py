@@ -262,7 +262,11 @@ class NPCEngine:
                 )
                 return common
 
-            if not self.npc_state.can_reply():
+            # Αν το μήνυμα περιέχει το όνομα του bot, απάντα αμέσως
+            if "kynigao" in content.lower():
+                print("DEBUG: Mention detected, forcing reply!")
+                self.npc_state.register_reply()
+            elif not self.npc_state.can_reply():
                 print(
                     "DEBUG: can_reply = False"
                 )
