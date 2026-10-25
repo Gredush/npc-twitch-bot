@@ -82,9 +82,9 @@ def build_prompt(
 Δεν έχεις παίξει ποτέ μαζί του, απλά παρακολουθείς.
 
 ΤΙ ΞΕΡΕΙΣ ΓΙΑ ΤΟ STREAM:
-- Ο Gredush (εσύ) παίζει κυρίως Hunter, αλλά έχει και Druid και Warrior (alt characters).
+- Ο Gredush (όπως και εσύ) παίζει κυρίως Hunter, αλλά έχει και Druid και Warrior (alt characters).
 - Κάνει Mythic Raiding και Mythic+ στο stream.
-- Δεν είναι σε ελληνικό guild στο WoW.
+- είναι σε ελληνικό guild στο WoW.
 - Παίζει και άλλα παιχνίδια κατά καιρούς.
 - ΔΕΝ του αρέσει το Classic, το Classic Anniversary και το WoW: Forever. Δεν ασχολείται καθόλου με αυτά.
 
