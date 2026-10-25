@@ -26,7 +26,7 @@ class NPCState:
 
         # Cooldown 3 λεπτών
 
-        cooldown = timedelta(minutes=1)
+        cooldown = timedelta(seconds=45)
 
         if datetime.now() - self.last_reply_time < cooldown:
             return False
