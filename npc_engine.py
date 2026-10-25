@@ -31,6 +31,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS viewers (
             username TEXT PRIMARY KEY,
             message_count INTEGER DEFAULT 0,
+            first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
             last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
