@@ -15,39 +15,37 @@ from returning_viewer import (
 def init_db():
     conn = sqlite3.connect("memory.db")
     cursor = conn.cursor()
-    
-    # Πίνακας για τα μηνύματα (το βασικό που λείπει)
+
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            message TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        message TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
     """)
-    
-    # Πίνακας για τους viewers
+
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS viewers (
-            username TEXT PRIMARY KEY,
-            message_count INTEGER DEFAULT 0,
-            first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
+    CREATE TABLE IF NOT EXISTS viewers (
+        username TEXT PRIMARY KEY,
+        first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+        last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+        message_count INTEGER DEFAULT 0
+    )
     """)
-    
-    # Πίνακας για τη μνήμη (social memory)
+
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS social_memory (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            memory TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
+    CREATE TABLE IF NOT EXISTS memories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        memory TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
     """)
-    
+
     conn.commit()
     conn.close()
+
 
 class NPCEngine:
     COMMON_REPLIES = {
