@@ -277,15 +277,11 @@ class NPCEngine:
             "DEBUG: can_reply = True"
         )
         if not force_reply:
-            try:
-                if mentioned:
-                    should = (
-                        random.random() < 0.90
-                    )
-                    print(
-                        f"DEBUG: mention reply = {should}"
-                    )
-                else:
+            if is_mention:
+                print("DEBUG: Mention detected, skipping should_reply check")
+                should = True
+            else:
+                try:
                     should = should_reply(
                         username,
                         content
@@ -293,9 +289,12 @@ class NPCEngine:
                     print(
                         f"DEBUG: should_reply = {should}"
                     )
-                if not should:
+                except Exception as e:
+                    print(f"SHOULD_REPLY ERROR: {e}")
                     return None
-            except Exception as e:
+
+            if not should:
+                return None
                 print(
                     f"SHOULD_REPLY ERROR: {e}"
                 )
