@@ -12,6 +12,42 @@ from reply_memory_instance import reply_memory
 from returning_viewer import (
     ReturningViewer
 )
+def init_db():
+    conn = sqlite3.connect("memory.db")
+    cursor = conn.cursor()
+    
+    # Πίνακας για τα μηνύματα (το βασικό που λείπει)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            message TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Πίνακας για τους viewers
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS viewers (
+            username TEXT PRIMARY KEY,
+            message_count INTEGER DEFAULT 0,
+            last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Πίνακας για τη μνήμη (social memory)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS social_memory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            memory TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    conn.commit()
+    conn.close()
+
 class NPCEngine:
     COMMON_REPLIES = {
         "ti kaneis": [
@@ -52,6 +88,7 @@ class NPCEngine:
         ]
     }
     def __init__(self):
+        init_db()
         self.social_memory = SocialMemory()
         self.memory_extractor = MemoryExtractor()
         self.affinity_manager = AffinityManager()
