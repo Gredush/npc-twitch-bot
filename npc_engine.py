@@ -252,6 +252,8 @@ class NPCEngine:
         print(
             "DEBUG: maybe_generate_reply called"
         )
+        is_mention = "kynigao" in content.lower()
+
         if not force_reply:
             common = self.try_common_reply(
                 content
@@ -263,7 +265,7 @@ class NPCEngine:
                 return common
 
             # Αν το μήνυμα περιέχει το όνομα του bot, απάντα αμέσως
-            if "kynigao" in content.lower():
+            if is_mention:
                 print("DEBUG: Mention detected, forcing reply!")
                 self.npc_state.register_reply()
             elif not self.npc_state.can_reply():
