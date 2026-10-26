@@ -252,7 +252,7 @@ class NPCEngine:
         print(
             "DEBUG: maybe_generate_reply called"
         )
-        is_mention = "kynigao" in content.lower()
+        is_mention = "kynigao" in content.lower() or "kynigao_for_fun" in content.lower()
 
         if not force_reply:
             common = self.try_common_reply(

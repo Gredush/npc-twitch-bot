@@ -16,7 +16,7 @@ class NPCState:
 
         # Τουλάχιστον 10 μηνύματα από τότε που μίλησε
 
-        if self.messages_since_reply < 4:
+        if self.messages_since_reply < 2:
             return False
 
         # Πρώτη φορά
@@ -26,7 +26,7 @@ class NPCState:
 
         # Cooldown 3 λεπτών
 
-        cooldown = timedelta(seconds=45)
+        cooldown = timedelta(seconds=30)
 
         if datetime.now() - self.last_reply_time < cooldown:
             return False
