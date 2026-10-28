@@ -6,6 +6,8 @@ from language_detector import LanguageDetector
 from context_recall import ContextRecall
 from interest_manager import InterestManager
 
+RECENT_REPLIES = []
+
 
 def load_personality():
 
@@ -147,11 +149,15 @@ MESSAGE:
 - όχι "Looking at memories"
 
 Αν δεν ξέρεις κάτι, ΜΗΝ πεις "δεν ξέρω". 
-Αντίθετα, χρησιμοποίησε μια από τις παρακάτω φράσεις:
+Αντίθετα, ρώτησε πίσω με φυσικό τρόπο (π.χ. "τι εννοείς ρε;", "τι είναι αυτό;") ή χρησιμοποίησε μια από τις παρακάτω φράσεις:
 - έλα ντε
 - ποιος ξέρει
 - τι να σου πω
 - δεν έχω ιδέα ρε
+
+ΑΠΑΓΟΡΕΥΕΤΑΙ ΝΑ ΕΠΑΝΑΛΑΜΒΑΝΕΙΣ τον εαυτό σου.
+Μην επαναλαμβάνεις τον χρήστη (μην κάνεις copy-paste το μήνυμά του).
+Αν σου ζητηθεί να πεις κάτι που έχεις ήδη πει πρόσφατα, πες κάτι τελείως διαφορετικό.
 
 ΠΛΗΡΟΦΟΡΙΕΣ ΓΙΑ ΤΟ STREAM:
 Ο streamer (Gredush) παίζει κυρίως World of Warcraft. Μερικές φορές μιλάει για raids, mythic+, classes (π.χ. rogue, paladin, mage) και addons. Αν κάποιος ρωτήσει κάτι σχετικό και δεν ξέρεις την απάντηση, μπορείς να πεις "δεν πολυξέρω από αυτά" ή "παίζω άλλα".
@@ -253,6 +259,22 @@ def generate_reply(
         "BRAIN: calling router"
     )
 
-    return generate(
-        prompt
-    )
+    reply = generate(prompt)
+    
+    if not reply:
+        return reply
+
+    global RECENT_REPLIES
+    if reply in RECENT_REPLIES:
+        print(f"ΕΠΑΝΑΛΗΨΗ ΕΝΤΟΠΙΣΤΗΚΕ: {reply}")
+        prompt2 = prompt + "\n\nΠΡΟΣΟΧΗ: Μην πεις αυτό: '" + reply + "'. Πες κάτι τελείως διαφορετικό."
+        reply = generate(prompt2)
+        
+        if not reply or reply in RECENT_REPLIES:
+            return None
+
+    RECENT_REPLIES.append(reply)
+    if len(RECENT_REPLIES) > 5:
+        RECENT_REPLIES.pop(0)
+
+    return reply
