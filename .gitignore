@@ -6,3 +6,5 @@ __pycache__/
 *.backup
 *.bak
 *_backup
+*.bak
+*.backup

@@ -11,7 +11,7 @@ MIN_MESSAGES_BETWEEN = 2    # τουλάχιστον 2 μηνύματα από �
 IMPORTANT_COOLDOWN_SEC = 5  # bypass: max 1 απάντηση / 5s
 
 ALWAYS_ALLOW_PATTERNS = [
-    "i was here", "imoun edw", "ήμουν εδώ",
+    "ήμουν εδώ", "imoun edw",
 ]
 
 def _is_important_message(message):
@@ -20,8 +20,6 @@ def _is_important_message(message):
         return False
     m = message.lower()
     if "?" in message or ";" in message:
-        return True
-    if "@jokersmiles" in m or "joker" in m:
         return True
     if len(message) > 40:
         return True
