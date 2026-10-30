@@ -236,7 +236,7 @@ class NPCEngine:
             if self.returning_viewer.should_welcome_back(
                 username
             ):
-                if self.npc_state.can_reply():
+                if self.npc_state.can_reply(content):
                     welcome_message = (
                         self.returning_viewer
                         .welcome_message(
@@ -313,7 +313,7 @@ class NPCEngine:
             if is_mention:
                 print("DEBUG: Mention detected, forcing reply!")
                 self.npc_state.register_reply()
-            elif not self.npc_state.can_reply():
+            elif not self.npc_state.can_reply(content):
                 print(
                     "DEBUG: can_reply = False"
                 )
