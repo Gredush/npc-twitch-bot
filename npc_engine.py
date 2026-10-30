@@ -19,6 +19,24 @@ from returning_viewer import (
 import time as _dedup_time
 import hashlib as _dedup_hashlib
 
+# ============================================================
+# FILTER: αγνόηση bots και ! commands
+# ============================================================
+IGNORED_BOTS = {
+    "streamelements", "wizebot", "soundalerts",
+    "nightbot", "fossabot", "moobot", "sery_bot",
+}
+
+def _should_ignore(user, message):
+    """True αν το μήνυμα είναι από γνωστό bot ή ξεκινάει με !"""
+    if user.lower() in IGNORED_BOTS:
+        return True
+    if message.startswith("!"):
+        return True
+    return False
+# ============================================================
+
+
 _recent_messages = {}
 DEDUP_TTL = 5.0
 
@@ -205,6 +223,8 @@ class NPCEngine:
         username,
         content
     ):
+        if _should_ignore(username, content):
+            return
         if _is_duplicate(username, content):
             return
         print(
