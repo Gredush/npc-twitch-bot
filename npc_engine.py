@@ -10,47 +10,6 @@ from npc_memory import NPCMemory
 from npc_state import NPCState
 from reply_memory_instance import reply_memory
 from returning_viewer import (
-
-# ============================================================
-# DEDUP: αποφυγή διπλών μηνυμάτων από το Twitch
-# ============================================================
-import time as _dedup_time
-import hashlib as _dedup_hashlib
-
-# ============================================================
-# FILTER: αγνόηση bots και ! commands
-# ============================================================
-IGNORED_BOTS = {
-    "streamelements", "wizebot", "soundalerts",
-    "nightbot", "fossabot", "moobot", "sery_bot",
-}
-
-def _should_ignore(user, message):
-    """True αν το μήνυμα είναι από γνωστό bot ή ξεκινάει με !"""
-    if user.lower() in IGNORED_BOTS:
-        return True
-    if message.startswith("!"):
-        return True
-    return False
-# ============================================================
-
-
-_recent_messages = {}
-DEDUP_TTL = 5.0
-
-def _is_duplicate(user, message):
-    """True αν το ίδιο μήνυμα από τον ίδιο χρήστη ήρθε <5s πριν."""
-    key = _dedup_hashlib.md5(f"{user}|{message}".encode()).hexdigest()
-    now = _dedup_time.time()
-    for k in list(_recent_messages.keys()):
-        if now - _recent_messages[k] > DEDUP_TTL:
-            del _recent_messages[k]
-    if key in _recent_messages:
-        return True
-    _recent_messages[key] = now
-    return False
-# ============================================================
-
     ReturningViewer
 )
 def init_db():
@@ -223,10 +182,6 @@ class NPCEngine:
         username,
         content
     ):
-    if _should_ignore(user, message):
-        return
-    if _is_duplicate(user, message):
-        return
         print(
             "DEBUG: process_message"
         )
@@ -236,7 +191,7 @@ class NPCEngine:
             if self.returning_viewer.should_welcome_back(
                 username
             ):
-                if self.npc_state.can_reply(content):
+                if self.npc_state.can_reply():
                     welcome_message = (
                         self.returning_viewer
                         .welcome_message(
@@ -297,7 +252,7 @@ class NPCEngine:
         print(
             "DEBUG: maybe_generate_reply called"
         )
-        is_mention = "joker" in content.lower() or "@jokersmiles" in content.lower()
+        is_mention = "kynigao" in content.lower() or "kynigao_for_fun" in content.lower()
 
         if not force_reply:
             common = self.try_common_reply(
@@ -313,7 +268,7 @@ class NPCEngine:
             if is_mention:
                 print("DEBUG: Mention detected, forcing reply!")
                 self.npc_state.register_reply()
-            elif not self.npc_state.can_reply(content):
+            elif not self.npc_state.can_reply():
                 print(
                     "DEBUG: can_reply = False"
                 )
