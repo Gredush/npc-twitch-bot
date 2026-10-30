@@ -10,6 +10,29 @@ from npc_memory import NPCMemory
 from npc_state import NPCState
 from reply_memory_instance import reply_memory
 from returning_viewer import (
+
+# ============================================================
+# DEDUP: αποφυγή διπλών μηνυμάτων από το Twitch
+# ============================================================
+import time as _dedup_time
+import hashlib as _dedup_hashlib
+
+_recent_messages = {}
+DEDUP_TTL = 5.0
+
+def _is_duplicate(user, message):
+    """True αν το ίδιο μήνυμα από τον ίδιο χρήστη ήρθε <5s πριν."""
+    key = _dedup_hashlib.md5(f"{user}|{message}".encode()).hexdigest()
+    now = _dedup_time.time()
+    for k in list(_recent_messages.keys()):
+        if now - _recent_messages[k] > DEDUP_TTL:
+            del _recent_messages[k]
+    if key in _recent_messages:
+        return True
+    _recent_messages[key] = now
+    return False
+# ============================================================
+
     ReturningViewer
 )
 def init_db():
@@ -182,6 +205,8 @@ class NPCEngine:
         username,
         content
     ):
+    if _is_duplicate(user, message):
+        return
         print(
             "DEBUG: process_message"
         )

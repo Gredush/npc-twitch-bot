@@ -1,3 +1,5 @@
 .env
 __pycache__/
 *.db
+*.dedup_backup
+*.clean_backup
