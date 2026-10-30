@@ -3,3 +3,6 @@ __pycache__/
 *.db
 *.dedup_backup
 *.clean_backup
+*.backup
+*.bak
+*_backup
