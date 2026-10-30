@@ -8,6 +8,35 @@ from interest_manager import InterestManager
 
 RECENT_REPLIES = []
 
+# ============================================================
+# STRATEGY FALLBACK: όταν το μοντέλο επαναλαμβάνεται
+# ============================================================
+import random as _strategy_random
+
+_STRATEGY_PROMPTS = [
+    "Απάντα ΜΟΝΟ με μια σύντομη ερώτηση (≤8 λέξεις).",
+    "Απάντησε με ≤5 λέξεις, σαν να βαριέσαι λίγο.",
+    "Κάνε ένα σύντομο αστείο για το raid/WoW.",
+    "Σχολίασε το τελευταίο μήνυμα του chat με 1 πρόταση.",
+    "Απάντα σαν να μιλάς σε φίλο, ανεπίσημα, ≤10 λέξεις.",
+]
+
+_GENERIC_REPLIES = {
+    "ποιος ξέρει", "τι να σου πω", "ναι ακριβώς", "ναι, ακριβώς",
+    "χαχα ναι", "έλα ντε", "δεν ξέρω", "whatever", "τι;",
+}
+
+def _normalize(text):
+    return text.strip().lower().rstrip(".!;,")
+
+def _is_generic(text):
+    return _normalize(text) in {_normalize(g) for g in _GENERIC_REPLIES}
+
+def _pick_strategy():
+    return _strategy_random.choice(_STRATEGY_PROMPTS)
+# ============================================================
+
+
 
 def load_personality():
 
@@ -272,16 +301,29 @@ def generate_reply(
         return reply
 
     global RECENT_REPLIES
-    if reply in RECENT_REPLIES:
-        print(f"ΕΠΑΝΑΛΗΨΗ ΕΝΤΟΠΙΣΤΗΚΕ: {reply}")
-        prompt2 = prompt + "\n\nΠΡΟΣΟΧΗ: Μην πεις αυτό: '" + reply + "'. Πες κάτι τελείως διαφορετικό."
-        reply = generate(prompt2)
-        
-        if not reply or reply in RECENT_REPLIES:
+
+    def _is_bad(r):
+        return (not r) or (r in RECENT_REPLIES) or _is_generic(r)
+
+    if _is_bad(reply):
+        if reply in RECENT_REPLIES:
+            print(f"ΕΠΑΝΑΛΗΨΗ ΕΝΤΟΠΙΣΤΗΚΕ: {reply}")
+        elif _is_generic(reply):
+            print(f"GENERIC ΕΝΤΟΠΙΣΤΗΚΕ: {reply}")
+
+        # 2η προσπάθεια με ΑΛΛΗ στρατηγική
+        strategy = _pick_strategy()
+        prompt2 = prompt + "\n\n[ΟΔΗΓΙΑ ΔΕΥΤΕΡΗΣ ΠΡΟΣΠΑΘΕΙΑΣ]\n" + strategy
+        reply2 = generate(prompt2)
+
+        if _is_bad(reply2):
+            print(f"SKIP: και η 2η προσπάθεια ήταν κακή ({reply2})")
             return None
 
+        reply = reply2
+
     RECENT_REPLIES.append(reply)
-    if len(RECENT_REPLIES) > 5:
+    if len(RECENT_REPLIES) > 10:
         RECENT_REPLIES.pop(0)
 
     return reply
